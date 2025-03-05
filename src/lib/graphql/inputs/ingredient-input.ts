@@ -1,6 +1,6 @@
 import { InputType, Field } from "type-graphql";
 
-@InputType()
+@InputType("GqlIngredientInput")
 export class IngredientInput {
   @Field()
   name: string;

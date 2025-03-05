@@ -24,36 +24,6 @@ export type Scalars = {
   DateTimeISO: any;
 };
 
-@TypeGraphQL.InputType()
-export class CreateRecipeInput {
-  @TypeGraphQL.Field((type) => String)
-  categoryId!: Scalars["String"];
-
-  @TypeGraphQL.Field((type) => String)
-  cookTime!: Scalars["String"];
-
-  @TypeGraphQL.Field((type) => String)
-  description!: Scalars["String"];
-
-  @TypeGraphQL.Field((type) => String, { nullable: true })
-  image?: Maybe<Scalars["String"]>;
-
-  @TypeGraphQL.Field((type) => [IngredientInput])
-  ingredients!: Array<IngredientInput>;
-
-  @TypeGraphQL.Field((type) => [String])
-  instructions!: Array<Scalars["String"]>;
-
-  @TypeGraphQL.Field((type) => String)
-  prepTime!: Scalars["String"];
-
-  @TypeGraphQL.Field((type) => TypeGraphQL.Float)
-  servings!: Scalars["Float"];
-
-  @TypeGraphQL.Field((type) => String)
-  title!: Scalars["String"];
-}
-
 @TypeGraphQL.ObjectType()
 export class GqlCategory {
   __typename?: "GqlCategory";
@@ -66,6 +36,36 @@ export class GqlCategory {
 
   @TypeGraphQL.Field((type) => [GqlRecipe])
   recipes!: Array<GqlRecipe>;
+}
+
+@TypeGraphQL.InputType()
+export class GqlCreateRecipeInput {
+  @TypeGraphQL.Field((type) => String)
+  categoryId!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String)
+  cookTime!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String)
+  description!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String, { nullable: true })
+  image?: Maybe<Scalars["String"]>;
+
+  @TypeGraphQL.Field((type) => [GqlIngredientInput])
+  ingredients!: Array<GqlIngredientInput>;
+
+  @TypeGraphQL.Field((type) => [String])
+  instructions!: Array<Scalars["String"]>;
+
+  @TypeGraphQL.Field((type) => String)
+  prepTime!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => TypeGraphQL.Float)
+  servings!: Scalars["Float"];
+
+  @TypeGraphQL.Field((type) => String)
+  title!: Scalars["String"];
 }
 
 @TypeGraphQL.ObjectType()
@@ -83,6 +83,18 @@ export class GqlIngredient {
 
   @TypeGraphQL.Field((type) => [GqlRecipe])
   recipes!: Array<GqlRecipe>;
+
+  @TypeGraphQL.Field((type) => String, { nullable: true })
+  unit?: Maybe<Scalars["String"]>;
+}
+
+@TypeGraphQL.InputType()
+export class GqlIngredientInput {
+  @TypeGraphQL.Field((type) => String)
+  amount!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String)
+  name!: Scalars["String"];
 
   @TypeGraphQL.Field((type) => String, { nullable: true })
   unit?: Maybe<Scalars["String"]>;
@@ -129,18 +141,6 @@ export class GqlRecipe {
   updatedAt!: Scalars["DateTimeISO"];
 }
 
-@TypeGraphQL.InputType()
-export class IngredientInput {
-  @TypeGraphQL.Field((type) => String)
-  amount!: Scalars["String"];
-
-  @TypeGraphQL.Field((type) => String)
-  name!: Scalars["String"];
-
-  @TypeGraphQL.Field((type) => String, { nullable: true })
-  unit?: Maybe<Scalars["String"]>;
-}
-
 export type Mutation = {
   __typename?: "Mutation";
   createRecipe: GqlRecipe;
@@ -149,8 +149,8 @@ export type Mutation = {
 
 @TypeGraphQL.ArgsType()
 export class MutationCreateRecipeArgs {
-  @TypeGraphQL.Field((type) => CreateRecipeInput)
-  data!: FixDecorator<CreateRecipeInput>;
+  @TypeGraphQL.Field((type) => GqlCreateRecipeInput)
+  data!: FixDecorator<GqlCreateRecipeInput>;
 }
 
 @TypeGraphQL.ArgsType()

@@ -1,33 +1,32 @@
-import { InputType, Field } from "type-graphql"
-import { IngredientInput } from "./ingredient-input"
+import { InputType, Field } from "type-graphql";
+import { IngredientInput } from "./ingredient-input";
 
-@InputType()
+@InputType("GqlCreateRecipeInput")
 export class CreateRecipeInput {
   @Field()
-  title: string
+  title: string;
 
   @Field()
-  description: string
+  description: string;
 
   @Field({ nullable: true })
-  image?: string
+  image?: string;
 
   @Field()
-  prepTime: string
+  prepTime: string;
 
   @Field()
-  cookTime: string
+  cookTime: string;
 
   @Field()
-  servings: number
+  servings: number;
 
   @Field(() => [String])
-  instructions: string[]
+  instructions: string[];
 
   @Field()
-  categoryId: string
+  categoryId: string;
 
   @Field(() => [IngredientInput])
-  ingredients: IngredientInput[]
+  ingredients: IngredientInput[];
 }
-
