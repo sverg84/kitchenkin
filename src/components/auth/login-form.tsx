@@ -2,25 +2,22 @@
 
 import type React from "react";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { FaGoogle } from "react-icons/fa";
+import { login } from "@/lib/auth/server-actions";
+import { FaGoogle } from "react-icons/fa6";
 
 export function LoginForm() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsLoading(true);
     setError(null);
 
     const formData = new FormData(event.currentTarget);
@@ -28,34 +25,24 @@ export function LoginForm() {
     const password = formData.get("password") as string;
 
     try {
-      const result = await signIn("credentials", {
+      await login("credentials", {
         email,
         password,
-        redirect: false,
       });
-
-      if (result?.error) {
-        setError("Invalid email or password");
-        setIsLoading(false);
-        return;
-      }
-
-      router.push("/");
-      router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
-      setIsLoading(false);
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    await signIn("google", { callbackUrl: "/" });
-  };
-
   return (
     <Card>
-      <form onSubmit={onSubmit}>
+      <form
+        onSubmit={(event) => {
+          startTransition(async () => {
+            await onSubmit(event);
+          });
+        }}
+      >
         <CardContent className="space-y-4 pt-6">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -101,7 +88,11 @@ export function LoginForm() {
             type="button"
             variant="outline"
             className="w-full"
-            onClick={handleGoogleSignIn}
+            onClick={() =>
+              startTransition(async () => {
+                await login("google");
+              })
+            }
             disabled={isLoading}
           >
             <FaGoogle className="mr-2 size-4" />

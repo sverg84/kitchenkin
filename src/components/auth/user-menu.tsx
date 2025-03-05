@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,18 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Plus } from "lucide-react";
+import { logout } from "@/lib/auth/server-actions";
 
 export function UserMenu() {
   const { data: session, status } = useSession();
-  const router = useRouter();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-    await signOut({ redirect: false });
-    router.push("/");
-    router.refresh();
-  };
+  const [isSigningOut, startTransition] = useTransition();
 
   if (status === "loading") {
     return (
@@ -99,7 +91,11 @@ export function UserMenu() {
         <DropdownMenuItem
           className="cursor-pointer"
           disabled={isSigningOut}
-          onClick={handleSignOut}
+          onClick={() =>
+            startTransition(async () => {
+              await logout();
+            })
+          }
         >
           <LogOut className="mr-2 size-4" />
           {isSigningOut ? "Signing out..." : "Sign out"}
