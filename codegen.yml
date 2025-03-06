@@ -3,9 +3,6 @@ documents: "src/**/*.ts"
 generates:
   src/lib/generated/graphql.ts:
     plugins:
-      # - "typescript"
-      # - "typescript-operations"
-      # - "typescript-resolvers"
       - "typescript-type-graphql"
     config:
-      noCache: true
+      # noCache: true

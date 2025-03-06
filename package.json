@@ -45,9 +45,6 @@
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.5",
-    "@graphql-codegen/typescript": "^4.1.5",
-    "@graphql-codegen/typescript-operations": "^4.5.1",
-    "@graphql-codegen/typescript-resolvers": "^4.4.4",
     "@graphql-codegen/typescript-type-graphql": "^3.0.0",
     "@tailwindcss/postcss": "^4.0.9",
     "@types/bcryptjs": "^2.4.6",
