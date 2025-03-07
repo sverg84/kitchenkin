@@ -1,13 +1,13 @@
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import RedditProvider from "next-auth/providers/reddit";
 import bcrypt from "bcryptjs";
+import CustomPrismaAdapter from "@/lib/prisma/adapter";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: CustomPrismaAdapter,
   debug: process.env.NODE_ENV === "development",
   session: {
     strategy: "database",
