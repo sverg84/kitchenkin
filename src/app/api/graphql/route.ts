@@ -26,7 +26,14 @@ const server = new ApolloServer<GraphQLContext>({
 
 // Create and export the API route handler
 const handler = startServerAndCreateNextHandler<NextRequest>(server, {
-  context: async () => {
+  context: async (req) => {
+    const authorization = req.headers.get("Authorization");
+    const token = authorization ? authorization.split(" ")[1] : null;
+
+    if (token) {
+      req.cookies.set("authjs.session-token", token);
+    }
+
     const session = await auth();
     return {
       user: session?.user
@@ -45,5 +52,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  console.log("cooky", req.cookies);
   return handler(req);
 }

@@ -54,13 +54,9 @@ export class RecipeResolver {
   @Authorized()
   @Query(() => [RecipeEntity])
   async myRecipes(@Ctx() { user }: GraphQLContext) {
-    if (!user?.id) {
-      throw new Error("Not authenticated");
-    }
-
     return await prisma.recipe.findMany({
       where: {
-        userId: user.id,
+        userId: user!.id,
       },
       include: {
         category: true,
@@ -75,16 +71,12 @@ export class RecipeResolver {
     @Arg("data", () => CreateRecipeInput) data: CreateRecipeInput,
     @Ctx() { user }: GraphQLContext
   ) {
-    if (!user?.id) {
-      throw new Error("Not authenticated");
-    }
-
     const { ingredients, ...recipeData } = data;
 
     return await prisma.recipe.create({
       data: {
         ...recipeData,
-        userId: user.id,
+        userId: user!.id,
         ingredients: {
           create: ingredients,
         },
@@ -99,17 +91,13 @@ export class RecipeResolver {
   @Authorized()
   @Mutation(() => RecipeEntity, { nullable: true })
   async deleteRecipe(@Arg("id") id: string, @Ctx() { user }: GraphQLContext) {
-    if (!user?.id) {
-      throw new Error("Not authenticated");
-    }
-
     // Check if the recipe belongs to the user
     const recipe = await prisma.recipe.findUnique({
       where: { id },
       select: { userId: true },
     });
 
-    if (!recipe || recipe.userId !== user.id) {
+    if (!recipe || recipe.userId !== user!.id) {
       throw new Error("Not authorized to delete this recipe");
     }
 
