@@ -1,18 +1,24 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useMutation } from "@apollo/client"
-import { gql } from "@apollo/client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trash2, Plus } from "lucide-react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Trash2, Plus } from "lucide-react";
 
 const CREATE_RECIPE = gql`
   mutation CreateRecipe($data: CreateRecipeInput!) {
@@ -21,60 +27,66 @@ const CREATE_RECIPE = gql`
       title
     }
   }
-`
+`;
 
 interface Category {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface RecipeFormProps {
-  categories: Category[]
+  categories: Category[];
 }
 
 export function RecipeForm({ categories }: RecipeFormProps) {
-  const router = useRouter()
-  const [createRecipe, { loading, error }] = useMutation(CREATE_RECIPE)
+  const router = useRouter();
+  const [createRecipe, { loading, error }] = useMutation(CREATE_RECIPE);
 
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [prepTime, setPrepTime] = useState("")
-  const [cookTime, setCookTime] = useState("")
-  const [servings, setServings] = useState(4)
-  const [categoryId, setCategoryId] = useState("")
-  const [ingredients, setIngredients] = useState([{ name: "", amount: "", unit: "" }])
-  const [instructions, setInstructions] = useState([""])
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [prepTime, setPrepTime] = useState("");
+  const [cookTime, setCookTime] = useState("");
+  const [servings, setServings] = useState(4);
+  const [categoryId, setCategoryId] = useState("");
+  const [ingredients, setIngredients] = useState([
+    { name: "", amount: "", unit: "" },
+  ]);
+  const [instructions, setInstructions] = useState([""]);
 
   const handleAddIngredient = () => {
-    setIngredients([...ingredients, { name: "", amount: "", unit: "" }])
-  }
+    setIngredients([...ingredients, { name: "", amount: "", unit: "" }]);
+  };
 
   const handleRemoveIngredient = (index: number) => {
-    setIngredients(ingredients.filter((_, i) => i !== index))
-  }
+    setIngredients(ingredients.filter((_, i) => i !== index));
+  };
 
-  const handleIngredientChange = (index: number, field: string, value: string) => {
-    const newIngredients = [...ingredients]
-    newIngredients[index] = { ...newIngredients[index], [field]: value }
-    setIngredients(newIngredients)
-  }
+  const handleIngredientChange = (
+    index: number,
+    field: string,
+    value: string
+  ) => {
+    const newIngredients = [...ingredients];
+    newIngredients[index] = { ...newIngredients[index], [field]: value };
+    setIngredients(newIngredients);
+  };
 
   const handleAddInstruction = () => {
-    setInstructions([...instructions, ""])
-  }
+    setInstructions([...instructions, ""]);
+  };
 
   const handleRemoveInstruction = (index: number) => {
-    setInstructions(instructions.filter((_, i) => i !== index))
-  }
+    setInstructions(instructions.filter((_, i) => i !== index));
+  };
 
   const handleInstructionChange = (index: number, value: string) => {
-    const newInstructions = [...instructions]
-    newInstructions[index] = value
-    setInstructions(newInstructions)
-  }
+    const newInstructions = [...instructions];
+    newInstructions[index] = value;
+    setInstructions(newInstructions);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     try {
       const { data } = await createRecipe({
@@ -90,14 +102,14 @@ export function RecipeForm({ categories }: RecipeFormProps) {
             instructions: instructions.filter((inst) => inst.trim() !== ""),
           },
         },
-      })
+      });
 
-      router.push(`/recipes/${data.createRecipe.id}`)
-      router.refresh()
+      router.push(`/recipes/${data.createRecipe.id}`);
+      router.refresh();
     } catch (err) {
-      console.error("Error creating recipe:", err)
+      console.error("Error creating recipe:", err);
     }
-  }
+  };
 
   return (
     <Card>
@@ -106,7 +118,12 @@ export function RecipeForm({ categories }: RecipeFormProps) {
           <div className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="title">Recipe Title</Label>
-              <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
             </div>
 
             <div className="grid gap-2">
@@ -157,7 +174,7 @@ export function RecipeForm({ categories }: RecipeFormProps) {
 
             <div className="grid gap-2">
               <Label htmlFor="category">Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId} required>
+              <Select value={categoryId} onValueChange={setCategoryId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
@@ -174,7 +191,12 @@ export function RecipeForm({ categories }: RecipeFormProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Ingredients</Label>
-                <Button type="button" variant="outline" size="sm" onClick={handleAddIngredient}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddIngredient}
+                >
                   <Plus className="mr-1 size-4" />
                   Add Ingredient
                 </Button>
@@ -189,7 +211,9 @@ export function RecipeForm({ categories }: RecipeFormProps) {
                     <Input
                       id={`amount-${index}`}
                       value={ingredient.amount}
-                      onChange={(e) => handleIngredientChange(index, "amount", e.target.value)}
+                      onChange={(e) =>
+                        handleIngredientChange(index, "amount", e.target.value)
+                      }
                       placeholder="2"
                     />
                   </div>
@@ -201,7 +225,9 @@ export function RecipeForm({ categories }: RecipeFormProps) {
                     <Input
                       id={`unit-${index}`}
                       value={ingredient.unit}
-                      onChange={(e) => handleIngredientChange(index, "unit", e.target.value)}
+                      onChange={(e) =>
+                        handleIngredientChange(index, "unit", e.target.value)
+                      }
                       placeholder="tbsp"
                     />
                   </div>
@@ -213,7 +239,9 @@ export function RecipeForm({ categories }: RecipeFormProps) {
                     <Input
                       id={`name-${index}`}
                       value={ingredient.name}
-                      onChange={(e) => handleIngredientChange(index, "name", e.target.value)}
+                      onChange={(e) =>
+                        handleIngredientChange(index, "name", e.target.value)
+                      }
                       placeholder="Olive oil"
                     />
                   </div>
@@ -234,7 +262,12 @@ export function RecipeForm({ categories }: RecipeFormProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Instructions</Label>
-                <Button type="button" variant="outline" size="sm" onClick={handleAddInstruction}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddInstruction}
+                >
                   <Plus className="mr-1 size-4" />
                   Add Step
                 </Button>
@@ -249,7 +282,9 @@ export function RecipeForm({ categories }: RecipeFormProps) {
                   <div className="grid flex-1 gap-1">
                     <Textarea
                       value={instruction}
-                      onChange={(e) => handleInstructionChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleInstructionChange(index, e.target.value)
+                      }
                       placeholder={`Step ${index + 1}`}
                       rows={2}
                     />
@@ -270,11 +305,17 @@ export function RecipeForm({ categories }: RecipeFormProps) {
           </div>
 
           {error && (
-            <div className="text-sm text-destructive">{error.message || "An error occurred. Please try again."}</div>
+            <div className="text-sm text-destructive">
+              {error.message || "An error occurred. Please try again."}
+            </div>
           )}
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
@@ -284,6 +325,5 @@ export function RecipeForm({ categories }: RecipeFormProps) {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
-

@@ -1,4 +1,4 @@
-import type { AuthActionType } from "@/lib/auth/action-type";
+import type { AuthActionType } from "@/lib/auth/types";
 import type { TransitionStartFunction } from "react";
 import { login } from "@/lib/auth/server-actions";
 import { FaGoogle, FaReddit } from "react-icons/fa6";
