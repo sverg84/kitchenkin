@@ -14,17 +14,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Plus } from "lucide-react";
 import { logout } from "@/lib/auth/server-actions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function UserMenu() {
   const { data: session, status } = useSession();
   const [isSigningOut, startTransition] = useTransition();
 
   if (status === "loading") {
-    return (
-      <Button variant="ghost" size="sm" disabled>
-        Loading...
-      </Button>
-    );
+    return <Skeleton className="size-10 rounded-full" />;
   }
 
   if (status === "unauthenticated") {
