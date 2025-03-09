@@ -111,14 +111,7 @@ export function RecipeForm({ categories }: RecipeFormProps) {
       ingredients: [{ name: "", amount: "", unit: "" }],
     },
   });
-  const {
-    control,
-    handleSubmit,
-    getValues,
-    setValue,
-    formState: { errors },
-    watch,
-  } = form;
+  const { control, handleSubmit, getValues, setValue, watch } = form;
 
   const {
     fields: ingredientFields,
@@ -153,8 +146,6 @@ export function RecipeForm({ categories }: RecipeFormProps) {
       console.error("Error creating recipe:", err);
     }
   };
-
-  console.log(errors);
 
   return (
     <Card>
