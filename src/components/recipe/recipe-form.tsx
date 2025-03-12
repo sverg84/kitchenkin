@@ -3,9 +3,8 @@
 import type React from "react";
 
 import { useRouter } from "next/navigation";
-import { useMutation } from "@apollo/client";
+import { gql, useMutation } from "@apollo/client";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
-import { gql } from "@apollo/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,15 +29,20 @@ import {
 import { Trash2, Plus } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { GqlCreateRecipeInput } from "@/lib/generated/graphql";
+import { useRef } from "react";
 
 const CREATE_RECIPE = gql`
-  mutation CreateRecipe($data: CreateRecipeInput!) {
+  mutation CreateRecipe($data: GqlCreateRecipeInput!) {
     createRecipe(data: $data) {
       id
-      title
     }
   }
 `;
+
+type MutationResult = {
+  createRecipe: { id: string };
+};
 
 interface Category {
   id: string;
@@ -74,9 +78,14 @@ const zSchema = z.strictObject({
   description: z.string().trim().nonempty(),
   prepTime: z.string().trim().regex(recipeTimePattern),
   cookTime: z.string().trim().regex(recipeTimePattern),
-  servings: z.number().gt(0),
+  servings: z.coerce.number().gt(0),
   categoryId: z.string().cuid(),
   instructions: z.array(z.string().trim().nonempty()),
+  image: z.strictObject({
+    encoded: z.string().base64().nonempty(),
+    fileName: z.string().nonempty(),
+    fileType: z.string().nonempty(),
+  }),
   ingredients: z
     .strictObject({
       name: z.string().trim().nonempty(),
@@ -84,8 +93,8 @@ const zSchema = z.strictObject({
         .string()
         .trim()
         .regex(
-          /^\d+\/\d+$|^\d+$/,
-          "Amount must be a whole number or a fraction (e.g., '2' or '1/2')"
+          /^\d+(?: \d+\/\d+)?$|^\d+\/\d+$|^\d*(?:\.\d{1,2})?$/,
+          "Amount must be a whole number, a fraction, a mixed number, or a decimal with up to 2 decimal points (e.g., '2' or '1/2')"
         ),
       unit: z.string().trim().nonempty("Please select a unit"),
     })
@@ -96,8 +105,11 @@ type RecipeFormData = z.infer<typeof zSchema>;
 
 export function RecipeForm({ categories }: RecipeFormProps) {
   const router = useRouter();
-  const [createRecipe, { loading, error: mutationError }] =
-    useMutation(CREATE_RECIPE);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const [createRecipe, { loading, error: mutationError }] = useMutation<
+    MutationResult,
+    { data: GqlCreateRecipeInput }
+  >(CREATE_RECIPE);
 
   const form = useForm<RecipeFormData>({
     resolver: zodResolver(zSchema),
@@ -132,15 +144,36 @@ export function RecipeForm({ categories }: RecipeFormProps) {
     );
   };
 
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const imageFile = e.target.files?.item(0);
+    if (!imageFile) {
+      return;
+    }
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      // Remove data prefix to get base64 string of image
+      const imageEncoded = reader.result!.toString().split(",")[1];
+
+      setValue("image.fileName", imageFile.name);
+      setValue("image.fileType", imageFile.type);
+      setValue("image.encoded", imageEncoded);
+    };
+
+    reader.readAsDataURL(imageFile);
+  };
+
   const onSubmit = async () => {
     try {
+      const { servings, ...values } = getValues();
+      console.warn(servings, typeof servings);
       const { data } = await createRecipe({
         variables: {
-          data: getValues(),
+          data: { ...values, servings: parseInt(String(servings), 10) },
         },
       });
 
-      router.push(`/recipes/${data.createRecipe.id}`);
+      router.push(`/recipes/${data!.createRecipe.id}`);
       router.refresh();
     } catch (err) {
       console.error("Error creating recipe:", err);
@@ -153,6 +186,30 @@ export function RecipeForm({ categories }: RecipeFormProps) {
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
+              <div className="grid grid-cols-3">
+                <div className="col-2 flex flex-col justify-center gap-y-2">
+                  <Label>Image</Label>
+                  <Input
+                    className="hidden"
+                    ref={imageInputRef}
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.webp,.heic,.heif"
+                    onChange={handleImageFileChange}
+                  />
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      imageInputRef?.current?.click();
+                    }}
+                  >
+                    Choose File
+                  </Button>
+                  <span className="self-center">
+                    {form.watch("image.fileName") || "No image selected"}
+                  </span>
+                </div>
+              </div>
+
               <FormField
                 control={control}
                 name="title"
@@ -229,8 +286,11 @@ export function RecipeForm({ categories }: RecipeFormProps) {
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <FormControl>
-                      <Select>
-                        <SelectTrigger aria-invalid={!!error} {...field}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger aria-invalid={!!error}>
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>

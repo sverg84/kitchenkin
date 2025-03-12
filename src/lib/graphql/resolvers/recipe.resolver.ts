@@ -11,6 +11,7 @@ import { RecipeEntity } from "../entities/recipe";
 import { CreateRecipeInput } from "../inputs/recipe-input";
 import { prisma } from "@/lib/prisma";
 import type { GraphQLContext } from "../context";
+import type { Image } from "@prisma/client";
 
 @Resolver(RecipeEntity)
 export class RecipeResolver {
@@ -31,6 +32,7 @@ export class RecipeResolver {
       include: {
         category: true,
         ingredients: true,
+        image: true,
       },
     });
   }
@@ -71,19 +73,72 @@ export class RecipeResolver {
     @Arg("data", () => CreateRecipeInput) data: CreateRecipeInput,
     @Ctx() { user }: GraphQLContext
   ) {
-    const { ingredients, ...recipeData } = data;
+    const { image: imageInput, ingredients, categoryId, ...recipeData } = data;
+
+    const fileExtensions = [
+      "image/jpg",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+    ];
+    console.log(fileExtensions);
+    const validFileExtensions = new Set(fileExtensions);
+
+    let imageData: Image | undefined = undefined;
+    if (imageInput) {
+      if (!validFileExtensions.has(imageInput.fileType)) {
+        throw new Error(
+          `File must be an image of type: ${fileExtensions.join(", ")}`
+        );
+      }
+
+      const imageResponse = await fetch(process.env.IMAGE_UPLOAD_ENDPOINT!, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: imageInput.fileName,
+          image: imageInput.encoded,
+        }),
+      });
+
+      if (!imageResponse.ok) {
+        const { error } = await imageResponse.json();
+        throw new Error(error);
+      }
+
+      imageData = await imageResponse.json();
+    }
 
     return await prisma.recipe.create({
       data: {
         ...recipeData,
-        userId: user!.id,
+        category: {
+          connect: {
+            id: categoryId,
+          },
+        },
+        user: {
+          connect: {
+            id: user!.id,
+          },
+        },
         ingredients: {
           create: ingredients,
         },
+        image: imageData
+          ? {
+              create: imageData,
+            }
+          : undefined,
       },
       include: {
         category: true,
         ingredients: true,
+        image: true,
       },
     });
   }

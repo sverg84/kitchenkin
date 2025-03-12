@@ -24,10 +24,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 const zSchema = z.strictObject({
   email: z.string().trim().email("Please enter an email address"),
-  password: z
-    .string()
-    .trim()
-    .min(8, "Password must have at least 8 characters"),
 });
 
 export function LoginForm() {
@@ -38,7 +34,6 @@ export function LoginForm() {
     resolver: zodResolver(zSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
@@ -48,9 +43,13 @@ export function LoginForm() {
     setError(null);
 
     try {
-      await login("credentials", getValues());
-    } catch {
-      setError("Something went wrong. Please try again.");
+      await login("sendgrid", getValues());
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
+      );
     }
   }
 
@@ -78,27 +77,6 @@ export function LoginForm() {
                       placeholder="name@example.com"
                       disabled={isLoading}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center justify-between">
-                    <FormLabel>Password</FormLabel>
-                    <Link
-                      href="/forgot-password"
-                      className="text-sm text-primary underline-offset-4 hover:underline"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <FormControl>
-                    <Input {...field} type="password" disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

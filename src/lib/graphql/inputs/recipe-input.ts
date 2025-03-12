@@ -1,5 +1,7 @@
 import { InputType, Field } from "type-graphql";
 import { IngredientInput } from "./ingredient-input";
+import { IsOptional } from "class-validator";
+import { ImageInput } from "./image-input";
 
 @InputType("GqlCreateRecipeInput")
 export class CreateRecipeInput {
@@ -9,8 +11,9 @@ export class CreateRecipeInput {
   @Field()
   description: string;
 
-  @Field({ nullable: true })
-  image?: string;
+  @IsOptional()
+  @Field(() => ImageInput, { nullable: true })
+  image?: ImageInput;
 
   @Field()
   prepTime: string;

@@ -8,6 +8,7 @@ interface AuthSession extends Session {
 const createAuthLink = (session: Session | null) =>
   setContext(async (_, { headers }) => {
     // Get the authentication token from the session
+    console.log("apollo session", session);
     const token = session ? (session as AuthSession).sessionToken : null;
 
     // Return the headers to the context so httpLink can read them

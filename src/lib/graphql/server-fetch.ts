@@ -9,7 +9,6 @@ export const GET_RECIPES = gql`
       id
       title
       description
-      image
       prepTime
       cookTime
       category {
@@ -25,13 +24,18 @@ export const GET_RECIPE = gql`
       id
       title
       description
-      image
       prepTime
       cookTime
       servings
       instructions
       category {
         name
+      }
+      image {
+        optimized
+        small
+        medium
+        large
       }
       ingredients {
         id
@@ -49,7 +53,6 @@ export const GET_MY_RECIPES = gql`
       id
       title
       description
-      image
       prepTime
       cookTime
       category {

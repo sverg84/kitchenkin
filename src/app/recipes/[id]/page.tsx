@@ -1,11 +1,11 @@
 import { ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getRecipe } from "@/lib/graphql/server-fetch";
 import { notFound } from "next/navigation";
+import { RecipeImage } from "@/components/recipe/recipe-image";
 
 export default async function RecipePage({
   params,
@@ -29,13 +29,7 @@ export default async function RecipePage({
       </Link>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="relative aspect-video rounded-lg overflow-hidden">
-          <Image
-            src={recipe.image || "/placeholder.svg"}
-            alt={recipe.title}
-            fill
-            className="object-cover"
-            priority
-          />
+          <RecipeImage recipe={recipe} />
         </div>
         <div>
           <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>

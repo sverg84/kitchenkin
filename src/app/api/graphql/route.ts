@@ -52,6 +52,5 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  console.log("cooky", req.cookies);
   return handler(req);
 }

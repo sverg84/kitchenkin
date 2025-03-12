@@ -2,6 +2,7 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { CategoryEntity } from "./category";
 import { IngredientEntity } from "./ingredient";
 import { IsOptional } from "class-validator";
+import { ImageEntity } from "./image";
 
 @ObjectType("GqlRecipe")
 export class RecipeEntity {
@@ -15,8 +16,8 @@ export class RecipeEntity {
   description: string;
 
   @IsOptional()
-  @Field({ nullable: true })
-  image?: string;
+  @Field(() => ImageEntity, { nullable: true })
+  image?: ImageEntity;
 
   @Field()
   prepTime: string;

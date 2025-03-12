@@ -18,12 +18,27 @@ input GqlCreateRecipeInput {
   categoryId: String!
   cookTime: String!
   description: String!
-  image: String
+  image: GqlImageInput
   ingredients: [GqlIngredientInput!]!
   instructions: [String!]!
   prepTime: String!
   servings: Float!
   title: String!
+}
+
+type GqlImage {
+  id: ID!
+  large: String!
+  medium: String!
+  optimized: String!
+  original: String!
+  small: String!
+}
+
+input GqlImageInput {
+  encoded: String!
+  fileName: String!
+  fileType: String!
 }
 
 type GqlIngredient {
@@ -46,7 +61,7 @@ type GqlRecipe {
   createdAt: DateTimeISO!
   description: String!
   id: ID!
-  image: String
+  image: GqlImage
   ingredients: [GqlIngredient!]!
   instructions: [String!]!
   prepTime: String!

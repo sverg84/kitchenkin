@@ -22,12 +22,9 @@ import {
   Form,
 } from "@/components/ui/form";
 
-const PASSWORD_DESCRIPTION = "Password must be at least 8 characters long";
-
 const zSchema = z.strictObject({
   name: z.string().trim().nonempty("Please enter your name"),
   email: z.string().trim().email("Please enter an email address"),
-  password: z.string().trim().min(8, PASSWORD_DESCRIPTION),
 });
 
 export function RegisterForm() {
@@ -39,7 +36,6 @@ export function RegisterForm() {
     defaultValues: {
       name: "",
       email: "",
-      password: "",
     },
   });
 
@@ -50,25 +46,13 @@ export function RegisterForm() {
     const formData = getValues();
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to register");
-      }
-
-      // Sign in the user after successful registration
-      await login("credentials", formData);
+      await login("sendgrid", formData);
     } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message || "Something went wrong. Please try again.");
-      }
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
+      );
     }
   }
 
@@ -115,24 +99,6 @@ export function RegisterForm() {
                     />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={control}
-              name="password"
-              render={({ field, fieldState: { error } }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="password" disabled={isLoading} />
-                  </FormControl>
-                  <p
-                    aria-invalid={!!error}
-                    className="text-sm text-muted-foreground aria-invalid:text-destructive-foreground"
-                  >
-                    {PASSWORD_DESCRIPTION}
-                  </p>
                 </FormItem>
               )}
             />

@@ -49,8 +49,8 @@ export class GqlCreateRecipeInput {
   @TypeGraphQL.Field((type) => String)
   description!: Scalars["String"];
 
-  @TypeGraphQL.Field((type) => String, { nullable: true })
-  image?: Maybe<Scalars["String"]>;
+  @TypeGraphQL.Field((type) => GqlImageInput, { nullable: true })
+  image?: Maybe<GqlImageInput>;
 
   @TypeGraphQL.Field((type) => [GqlIngredientInput])
   ingredients!: Array<GqlIngredientInput>;
@@ -66,6 +66,41 @@ export class GqlCreateRecipeInput {
 
   @TypeGraphQL.Field((type) => String)
   title!: Scalars["String"];
+}
+
+@TypeGraphQL.ObjectType()
+export class GqlImage {
+  __typename?: "GqlImage";
+
+  @TypeGraphQL.Field((type) => TypeGraphQL.ID)
+  id!: Scalars["ID"];
+
+  @TypeGraphQL.Field((type) => String)
+  large!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String)
+  medium!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String)
+  optimized!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String)
+  original!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String)
+  small!: Scalars["String"];
+}
+
+@TypeGraphQL.InputType()
+export class GqlImageInput {
+  @TypeGraphQL.Field((type) => String)
+  encoded!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String)
+  fileName!: Scalars["String"];
+
+  @TypeGraphQL.Field((type) => String)
+  fileType!: Scalars["String"];
 }
 
 @TypeGraphQL.ObjectType()
@@ -119,8 +154,8 @@ export class GqlRecipe {
   @TypeGraphQL.Field((type) => TypeGraphQL.ID)
   id!: Scalars["ID"];
 
-  @TypeGraphQL.Field((type) => String, { nullable: true })
-  image?: Maybe<Scalars["String"]>;
+  @TypeGraphQL.Field((type) => GqlImage, { nullable: true })
+  image?: Maybe<GqlImage>;
 
   @TypeGraphQL.Field((type) => [GqlIngredient])
   ingredients!: Array<GqlIngredient>;

@@ -9,7 +9,6 @@ const GET_RECIPES = gql`
       id
       title
       description
-      image
       prepTime
       cookTime
       category {
