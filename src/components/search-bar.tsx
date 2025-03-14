@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { useSearchRecipes } from "@/lib/graphql/hooks/use-search-recipes"
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useSearchRecipes } from "@/lib/graphql/hooks/use-search-recipes";
 
 interface SearchBarProps {
-  className?: string
+  className?: string;
 }
 
 export function SearchBar({ className }: SearchBarProps) {
-  const [query, setQuery] = useState("")
-  const { search, results, loading } = useSearchRecipes()
+  const [query, setQuery] = useState("");
+  const { search, results, loading } = useSearchRecipes();
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    search(query)
-  }
+    e.preventDefault();
+    search(query);
+  };
 
   return (
     <form onSubmit={handleSearch} className={cn("relative", className)}>
@@ -32,7 +32,14 @@ export function SearchBar({ className }: SearchBarProps) {
         className="pr-12"
         disabled={loading}
       />
-      <Button type="submit" size="icon" variant="ghost" className="absolute right-0 top-0 h-full" disabled={loading}>
+      <Button
+        aria-label="Search"
+        type="submit"
+        size="icon"
+        variant="ghost"
+        className="absolute right-0 top-0 h-full"
+        disabled={loading}
+      >
         <Search className="size-4" />
       </Button>
       {results && (
@@ -40,12 +47,13 @@ export function SearchBar({ className }: SearchBarProps) {
           {results.map((recipe) => (
             <div key={recipe.id} className="p-2 hover:bg-muted">
               <h3 className="font-medium">{recipe.title}</h3>
-              <p className="text-sm text-muted-foreground">{recipe.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {recipe.description}
+              </p>
             </div>
           ))}
         </div>
       )}
     </form>
-  )
+  );
 }
-

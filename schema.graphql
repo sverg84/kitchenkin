@@ -46,13 +46,13 @@ type GqlIngredient {
   id: ID!
   name: String!
   recipes: [GqlRecipe!]!
-  unit: String
+  unit: String!
 }
 
 input GqlIngredientInput {
   amount: String!
   name: String!
-  unit: String
+  unit: String!
 }
 
 type GqlRecipe {
@@ -70,14 +70,29 @@ type GqlRecipe {
   updatedAt: DateTimeISO!
 }
 
+input GqlUpdateRecipeInput {
+  categoryId: String
+  cookTime: String
+  description: String
+  id: ID!
+  image: GqlImageInput
+  ingredients: [GqlIngredientInput!]
+  instructions: [String!]
+  prepTime: String
+  servings: Int
+  title: String
+}
+
 type Mutation {
   createRecipe(data: GqlCreateRecipeInput!): GqlRecipe!
   deleteRecipe(id: String!): GqlRecipe
+  updateRecipe(data: GqlUpdateRecipeInput!): GqlRecipe!
 }
 
 type Query {
   categories: [GqlCategory!]!
   category(id: String!): GqlCategory
+  favoriteRecipes: [GqlRecipe!]!
   myRecipes: [GqlRecipe!]!
   recipe(id: ID!): GqlRecipe
   recipes: [GqlRecipe!]!

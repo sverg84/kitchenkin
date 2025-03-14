@@ -1,9 +1,9 @@
-import { IsUrl, IsUUID } from "class-validator";
+import { IsHash, IsUrl } from "class-validator";
 import { Field, ID, ObjectType } from "type-graphql";
 
 @ObjectType("GqlImage")
 export class ImageEntity {
-  @IsUUID()
+  @IsHash("sha256")
   @Field(() => ID)
   id: string;
 

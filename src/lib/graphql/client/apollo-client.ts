@@ -6,6 +6,8 @@ import {
 } from "@apollo/client";
 import { auth } from "@/auth";
 import createAuthLink from "./auth-link";
+import { createFragmentRegistry } from "@apollo/client/cache";
+import { RecipeFragment } from "../fragments/recipe";
 
 let client: ApolloClient<NormalizedCacheObject> | undefined;
 
@@ -24,7 +26,9 @@ export async function getClient() {
 
     client = new ApolloClient({
       link: authLink.concat(httpLink),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(RecipeFragment),
+      }),
       ssrMode: typeof window === "undefined",
       defaultOptions: {
         query: {

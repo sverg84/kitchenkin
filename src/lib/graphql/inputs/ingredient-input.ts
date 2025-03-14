@@ -8,6 +8,6 @@ export class IngredientInput {
   @Field()
   amount: string;
 
-  @Field({ nullable: true })
-  unit?: string;
+  @Field()
+  unit: string;
 }

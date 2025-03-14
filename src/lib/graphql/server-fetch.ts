@@ -6,14 +6,7 @@ import type { RecipeEntity } from "./entities/recipe";
 export const GET_RECIPES = gql`
   query GetRecipesServer {
     recipes {
-      id
-      title
-      description
-      prepTime
-      cookTime
-      category {
-        name
-      }
+      ...GqlRecipe_commonDetails
     }
   }
 `;
@@ -21,28 +14,14 @@ export const GET_RECIPES = gql`
 export const GET_RECIPE = gql`
   query GetRecipe($id: ID!) {
     recipe(id: $id) {
-      id
-      title
-      description
-      prepTime
-      cookTime
-      servings
-      instructions
-      category {
-        name
-      }
-      image {
-        optimized
-        small
-        medium
-        large
-      }
+      ...GqlRecipe_commonDetails
       ingredients {
         id
         name
         amount
         unit
       }
+      instructions
     }
   }
 `;
@@ -50,14 +29,7 @@ export const GET_RECIPE = gql`
 export const GET_MY_RECIPES = gql`
   query GetMyRecipes {
     myRecipes {
-      id
-      title
-      description
-      prepTime
-      cookTime
-      category {
-        name
-      }
+      ...GqlRecipe_commonDetails
     }
   }
 `;

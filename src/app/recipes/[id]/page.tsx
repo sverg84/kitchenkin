@@ -29,7 +29,7 @@ export default async function RecipePage({
       </Link>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="relative aspect-video rounded-lg overflow-hidden">
-          <RecipeImage recipe={recipe} />
+          <RecipeImage recipe={recipe} priority={true} />
         </div>
         <div>
           <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>

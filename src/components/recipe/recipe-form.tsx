@@ -30,7 +30,7 @@ import { Trash2, Plus } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { GqlCreateRecipeInput } from "@/lib/generated/graphql";
-import { useRef } from "react";
+import { useTransition, useRef } from "react";
 
 const CREATE_RECIPE = gql`
   mutation CreateRecipe($data: GqlCreateRecipeInput!) {
@@ -106,7 +106,8 @@ type RecipeFormData = z.infer<typeof zSchema>;
 export function RecipeForm({ categories }: RecipeFormProps) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const [createRecipe, { loading, error: mutationError }] = useMutation<
+  const [loading, startTransition] = useTransition();
+  const [createRecipe, { error: mutationError }] = useMutation<
     MutationResult,
     { data: GqlCreateRecipeInput }
   >(CREATE_RECIPE);
@@ -166,7 +167,6 @@ export function RecipeForm({ categories }: RecipeFormProps) {
   const onSubmit = async () => {
     try {
       const { servings, ...values } = getValues();
-      console.warn(servings, typeof servings);
       const { data } = await createRecipe({
         variables: {
           data: { ...values, servings: parseInt(String(servings), 10) },
@@ -184,7 +184,14 @@ export function RecipeForm({ categories }: RecipeFormProps) {
     <Card>
       <CardContent className="pt-6">
         <Form {...form}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={handleSubmit(() => {
+              startTransition(async () => {
+                await onSubmit();
+              });
+            })}
+            className="space-y-6"
+          >
             <div className="space-y-4">
               <div className="grid grid-cols-3">
                 <div className="col-2 flex flex-col justify-center gap-y-2">

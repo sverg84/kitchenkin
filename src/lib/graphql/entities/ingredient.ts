@@ -12,8 +12,8 @@ export class IngredientEntity {
   @Field()
   amount: string;
 
-  @Field({ nullable: true })
-  unit?: string;
+  @Field()
+  unit: string;
 
   @Field(() => [RecipeEntity])
   recipes: RecipeEntity[];

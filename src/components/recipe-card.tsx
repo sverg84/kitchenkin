@@ -6,8 +6,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
-import Image from "next/image";
 import type { GqlRecipe } from "@/lib/generated/graphql";
+import { RecipeImage } from "./recipe/recipe-image";
 
 interface RecipeCardProps {
   recipe: GqlRecipe;
@@ -17,12 +17,7 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
   return (
     <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative aspect-video">
-        <Image
-          src={recipe.image?.optimized || "/placeholder.svg"}
-          alt={recipe.title}
-          fill
-          className="object-cover"
-        />
+        <RecipeImage recipe={recipe} />
       </div>
       <CardHeader>
         <div className="flex justify-between items-start">

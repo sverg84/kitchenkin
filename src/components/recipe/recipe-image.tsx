@@ -1,10 +1,16 @@
 "use client";
 
-import type { RecipeEntity } from "@/lib/graphql/entities/recipe";
+import type { GqlRecipe } from "@/lib/generated/graphql";
 import type { ImageLoaderProps } from "next/image";
 import Image from "next/image";
 
-export function RecipeImage({ recipe }: { recipe: RecipeEntity }) {
+export function RecipeImage({
+  recipe,
+  priority,
+}: {
+  recipe: GqlRecipe;
+  priority?: boolean;
+}) {
   const imageLoader = ({ width }: ImageLoaderProps) => {
     const { image } = recipe;
     if (!image) {
@@ -25,7 +31,7 @@ export function RecipeImage({ recipe }: { recipe: RecipeEntity }) {
       alt={recipe.title}
       fill
       className="object-cover"
-      priority
+      priority={priority}
     />
   );
 }

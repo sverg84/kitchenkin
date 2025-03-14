@@ -20,20 +20,22 @@ model Recipe {
   category     Category     @relation(fields: [categoryId], references: [id])
   categoryId   String
   ingredients  Ingredient[]
-  user         User?        @relation(fields: [userId], references: [id])
-  userId       String?
-  image        Image?       @relation(fields: [imageId], references: [id])
+  author       User?        @relation(name: "AuthoredRecipes", fields: [authorId], references: [id])
+  authorId     String?
+  favoritedBy  User[]       @relation(name: "FavoritedRecipes")
+  image        Image?
   imageId      String?      @unique
 }
 
 model Image {
-  id        String  @id @default(uuid())
+  id        String @id @default(uuid())
   original  String
   optimized String
   small     String
   medium    String
   large     String
-  Recipe    Recipe?
+  recipeId  String @unique
+  recipe    Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 }
 
 model Category {
@@ -46,8 +48,10 @@ model Ingredient {
   id      String   @id @default(cuid())
   name    String
   amount  String
-  unit    String?
+  unit    String
   recipes Recipe[]
+
+  @@unique([name, amount, unit])
 }
 
 model Account {
@@ -86,7 +90,8 @@ model User {
   password      String?
   accounts      Account[]
   sessions      Session[]
-  recipes       Recipe[]
+  recipes       Recipe[]  @relation(name: "AuthoredRecipes")
+  favorites     Recipe[]  @relation(name: "FavoritedRecipes")
 }
 
 model VerificationToken {
