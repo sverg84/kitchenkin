@@ -53,25 +53,29 @@ type Props = Readonly<{
     placeholder?: string;
   };
   items: CommandItems;
-  onSelect?: (value: string) => void;
+  value: string | null;
+  onChange: (value: string) => void;
 }>;
 
 export function Combobox({
   buttonProps,
   commandProps,
   items,
-  onSelect: onSelectProp,
+  value,
+  onChange,
 }: Props) {
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+
+  const itemsFlattened =
+    items.itemsFlat ?? Object.values(items.itemsGrouped).flat();
+
+  const item = itemsFlattened.find((item) => item.value === value);
+
   const [search, setSearch] = useState("");
 
-  const onSelect = (items: readonly Item[], newValue: string) => {
-    if (onSelectProp) {
-      onSelectProp(newValue);
-    }
-    setSelectedItem(items.find((item) => item.value === newValue) as Item);
+  const onSelect = (newValue: string) => {
+    onChange(newValue);
     setOpen(false);
   };
 
@@ -91,7 +95,7 @@ export function Combobox({
       variant={variant || "outline"}
       className="justify-between hover:bg-accent/30"
     >
-      {selectedItem ? selectedItem.label : placeholder || "Select value"}
+      {item ? item.label : placeholder || "Select value"}
       <ChevronsUpDown className="opacity-50" />
     </Button>
   );
@@ -135,7 +139,7 @@ function ItemList({
   placeholder?: string;
   items: CommandItems;
   value: string;
-  onSelect: (items: readonly Item[], value: string) => void;
+  onSelect: (value: string) => void;
   onValueChange: (value: string) => void;
 }) {
   return (
@@ -154,7 +158,7 @@ function ItemList({
                 key={item.value}
                 data-value={`${item.label} ${item.value}`}
                 onSelect={() => {
-                  onSelect(itemsFlat, item.value);
+                  onSelect(item.value);
                 }}
               >
                 {item.label} ({item.value})
@@ -170,9 +174,7 @@ function ItemList({
                   <CommandItem
                     key={item.value}
                     data-value={`${item.label} ${item.value}`}
-                    onSelect={() => {
-                      onSelect(items, item.value);
-                    }}
+                    onSelect={() => onSelect(item.value)}
                   >
                     {item.label} ({item.value})
                   </CommandItem>

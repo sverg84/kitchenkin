@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock } from "lucide-react";
+import { ArrowLeft, Clock, Edit } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { getRecipe } from "@/lib/graphql/server-fetch";
 import { notFound } from "next/navigation";
 import { RecipeImage } from "@/components/recipe/recipe-image";
+import { auth } from "@/auth";
+import { Allergen } from "@prisma/client";
 
 export default async function RecipePage({
   params,
@@ -13,7 +15,7 @@ export default async function RecipePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const recipe = await getRecipe(id);
+  const [recipe, session] = await Promise.all([getRecipe(id), auth()]);
 
   if (!recipe) {
     notFound();
@@ -28,13 +30,23 @@ export default async function RecipePage({
         </Button>
       </Link>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="relative aspect-video rounded-lg overflow-hidden">
-          <RecipeImage recipe={recipe} priority={true} />
+        <div className="flex flex-col gap-y-8">
+          <div className="relative aspect-video rounded-lg overflow-hidden">
+            <RecipeImage recipe={recipe} priority={true} />
+          </div>
+          {session?.user?.id === recipe.authorId && (
+            <Link className="self-center" href={`/recipe/${recipe.id}/edit`}>
+              <Button>
+                <label>Edit</label>
+                <Edit />
+              </Button>
+            </Link>
+          )}
         </div>
         <div>
           <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>
           <p className="text-muted-foreground mb-4">{recipe.description}</p>
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-4 items-center">
             <Badge>{recipe.category.name}</Badge>
             <div className="flex items-center">
               <Clock className="size-4 mr-1" />
@@ -46,6 +58,15 @@ export default async function RecipePage({
             </div>
             <div className="text-sm">Servings: {recipe.servings}</div>
           </div>
+          <ul className="flex flex-wrap gap-2 mb-4 items-center">
+            {recipe.allergens.map((allergen) => (
+              <li className="flex" key={allergen}>
+                <Badge variant="secondary">
+                  {allergen === Allergen.TreeNuts ? "Tree Nuts" : allergen}
+                </Badge>
+              </li>
+            ))}
+          </ul>
           <Separator className="my-6" />
           <div>
             <h2 className="text-xl font-semibold mb-4">Ingredients</h2>

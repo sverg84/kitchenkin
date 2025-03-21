@@ -6,23 +6,15 @@ import {
   Ctx,
   Authorized,
   ID,
+  FieldResolver,
+  Root,
 } from "type-graphql";
 import { RecipeEntity } from "../entities/recipe";
 import { CreateRecipeInput, UpdateRecipeInput } from "../inputs/recipe-input";
 import { prisma } from "@/lib/prisma";
 import type { GraphQLContext } from "../context";
-import type { ImageInput } from "../inputs/image-input";
 import type { IngredientInput } from "../inputs/ingredient-input";
-
-const fileTypes = [
-  "image/jpg",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-];
-const validFileTypes = new Set(fileTypes);
+import { deleteImageInS3, detectAllergens, imageCreateHandler } from "./lambda";
 
 /**
  * For each ingredient input, if the input combination already exists,
@@ -43,6 +35,16 @@ const ingredientsInputToDbOperation = (ingredients: IngredientInput[]) => ({
 
 @Resolver(RecipeEntity)
 export class RecipeResolver {
+  @FieldResolver(() => ID)
+  async authorId(@Root() recipe: RecipeEntity): Promise<string> {
+    const { authorId } = await prisma.recipe.findUniqueOrThrow({
+      where: { id: recipe.id },
+      select: { authorId: true },
+    });
+
+    return authorId;
+  }
+
   @Query(() => [RecipeEntity])
   async recipes() {
     return await prisma.recipe.findMany({
@@ -130,13 +132,15 @@ export class RecipeResolver {
   ) {
     const { image: imageInput, ingredients, categoryId, ...recipeData } = data;
 
-    const imageData = imageInput
-      ? await imageCreateHandler(imageInput)
-      : undefined;
+    const [imageData, allergens] = await Promise.all([
+      imageInput ? imageCreateHandler(imageInput) : undefined,
+      detectAllergens(data),
+    ]);
 
     return await prisma.recipe.create({
       data: {
         ...recipeData,
+        allergens,
         category: {
           connect: {
             id: categoryId,
@@ -175,7 +179,7 @@ export class RecipeResolver {
   @Authorized()
   @Mutation(() => RecipeEntity)
   async updateRecipe(
-    @Arg("data") data: UpdateRecipeInput,
+    @Arg("data", () => UpdateRecipeInput) data: UpdateRecipeInput,
     @Ctx() { user }: GraphQLContext
   ) {
     const {
@@ -187,35 +191,43 @@ export class RecipeResolver {
     } = data;
     await recipeAuthorInvariant(id, user!.id);
 
-    const imageData = imageInput
-      ? await imageCreateHandler(imageInput)
-      : undefined;
+    const [imageData, allergens] = await Promise.all([
+      imageInput ? imageCreateHandler(imageInput) : undefined,
+      detectAllergens(data),
+    ]);
 
-    await prisma.$transaction(async (client) => {
-      const deleteOperations = [];
-
+    return await prisma.$transaction(async (client) => {
       // If the image is replaced or removed, delete the old one
       if (imageInput === null || imageInput) {
-        deleteOperations.push(client.image.delete({ where: { recipeId: id } }));
+        await client.image.delete({ where: { recipeId: id } });
       }
 
-      await client.recipe.update({
+      return await client.recipe.update({
         where: { id },
         data: {
           ...recipeData,
+          allergens,
           category: categoryId
             ? {
                 connect: { id: categoryId },
               }
             : undefined,
           ingredients: ingredients
-            ? ingredientsInputToDbOperation(ingredients)
+            ? {
+                set: [],
+                ...ingredientsInputToDbOperation(ingredients),
+              }
             : undefined,
           image: imageData
             ? {
                 create: imageData,
               }
             : undefined,
+        },
+        include: {
+          category: true,
+          ingredients: true,
+          image: true,
         },
       });
     });
@@ -240,52 +252,6 @@ export class RecipeResolver {
 
     return recipe;
   }
-}
-
-/**
- * Invoke Lambda function, add image to S3, return CloudFront URLs
- * @param input the image input provided by the recipe form
- */
-async function imageCreateHandler({ fileName, fileType, encoded }: ImageInput) {
-  // The image must be of a valid MIME type
-  if (!validFileTypes.has(fileType)) {
-    throw new Error(`File must be an image of type: ${fileTypes.join(", ")}`);
-  }
-
-  const imageResponse = await fetch(process.env.IMAGE_UPLOAD_ENDPOINT!, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      fileName,
-      fileType,
-      image: encoded,
-    }),
-  });
-
-  if (!imageResponse.ok) {
-    const { error } = await imageResponse.json();
-    throw new Error(error);
-  }
-
-  return await imageResponse.json();
-}
-
-/**
- * Invoke a Lambda function to delete all versions of an image from S3.
- *
- * It's okay if the Lambda function fails. This is mostly a side effect.
- * @param id The SHA256 hash ID of the image
- */
-async function deleteImageInS3(id: string) {
-  await fetch(process.env.IMAGE_DELETE_ENDPOINT!, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ id }),
-  });
 }
 
 /**

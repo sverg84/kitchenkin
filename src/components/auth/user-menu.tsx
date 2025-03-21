@@ -77,7 +77,7 @@ export function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link
-            href="/recipes/new"
+            href="/recipe/new"
             className="flex w-full cursor-pointer items-center"
           >
             <Plus className="mr-2 size-4" />

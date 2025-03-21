@@ -1,6 +1,6 @@
 "use client";
 
-import type { GqlRecipe } from "@/lib/generated/graphql";
+import type { RecipeEntity } from "@/lib/graphql/entities/recipe";
 import type { ImageLoaderProps } from "next/image";
 import Image from "next/image";
 
@@ -8,13 +8,13 @@ export function RecipeImage({
   recipe,
   priority,
 }: {
-  recipe: GqlRecipe;
+  recipe: RecipeEntity;
   priority?: boolean;
 }) {
   const imageLoader = ({ width }: ImageLoaderProps) => {
     const { image } = recipe;
     if (!image) {
-      return "/placeholder.svg";
+      return `https://placeholder.pics/svg/640x480/DEDEDE/555555-f4f5e4/${recipe.title}`;
     }
     return width < 640
       ? image.small
@@ -27,7 +27,7 @@ export function RecipeImage({
   return (
     <Image
       loader={imageLoader}
-      src={recipe.image?.optimized || "/placeholder.svg"}
+      src="https://placeholder.pics/svg/"
       alt={recipe.title}
       fill
       className="object-cover"

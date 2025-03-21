@@ -3,7 +3,6 @@
 import type React from "react";
 
 import { useRouter } from "next/navigation";
-import { gql, useMutation } from "@apollo/client";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,29 +28,9 @@ import {
 import { Trash2, Plus } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { GqlCreateRecipeInput } from "@/lib/generated/graphql";
 import { useTransition, useRef } from "react";
-
-const CREATE_RECIPE = gql`
-  mutation CreateRecipe($data: GqlCreateRecipeInput!) {
-    createRecipe(data: $data) {
-      id
-    }
-  }
-`;
-
-type MutationResult = {
-  createRecipe: { id: string };
-};
-
-interface Category {
-  id: string;
-  name: string;
-}
-
-interface RecipeFormProps {
-  categories: Category[];
-}
+import { ApolloError } from "@apollo/client";
+import { RecipeEntity } from "@/lib/graphql/entities/recipe";
 
 const unitItems = {
   capacity: [
@@ -73,7 +52,8 @@ const unitItems = {
 
 const recipeTimePattern = /^\d+\s?(min|minutes)$/;
 
-const zSchema = z.strictObject({
+const createSchema = z.strictObject({
+  type: z.literal("create"),
   title: z.string().trim().nonempty(),
   description: z.string().trim().nonempty(),
   prepTime: z.string().trim().regex(recipeTimePattern),
@@ -81,11 +61,13 @@ const zSchema = z.strictObject({
   servings: z.coerce.number().gt(0),
   categoryId: z.string().cuid(),
   instructions: z.array(z.string().trim().nonempty()),
-  image: z.strictObject({
-    encoded: z.string().base64().nonempty(),
-    fileName: z.string().nonempty(),
-    fileType: z.string().nonempty(),
-  }),
+  image: z
+    .strictObject({
+      encoded: z.string().base64().nonempty(),
+      fileName: z.string().nonempty(),
+      fileType: z.string().nonempty(),
+    })
+    .optional(),
   ingredients: z
     .strictObject({
       name: z.string().trim().nonempty(),
@@ -95,33 +77,99 @@ const zSchema = z.strictObject({
         .regex(
           /^\d+(?: \d+\/\d+)?$|^\d+\/\d+$|^\d*(?:\.\d{1,2})?$/,
           "Amount must be a whole number, a fraction, a mixed number, or a decimal with up to 2 decimal points (e.g., '2' or '1/2')"
-        ),
+        )
+        .nonempty(),
       unit: z.string().trim().nonempty("Please select a unit"),
     })
     .array(),
 });
 
-type RecipeFormData = z.infer<typeof zSchema>;
+const updateSchema = createSchema.extend({
+  type: z.literal("update"),
+  id: z.string().cuid(),
+});
 
-export function RecipeForm({ categories }: RecipeFormProps) {
+const recipeFormSchema = z.discriminatedUnion("type", [
+  createSchema,
+  updateSchema,
+]);
+
+type RecipeFormData = z.infer<typeof recipeFormSchema>;
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface RecipeFormProps {
+  categories: Category[];
+  mutationError: ApolloError | undefined;
+  initialRecipe: RecipeEntity | undefined;
+  type: "create" | "update";
+  onSubmit: (variables: RecipeFormData) => Promise<void>;
+}
+
+export type DirtyFieldsType =
+  | boolean
+  | null
+  | {
+      [key: string]: DirtyFieldsType;
+    }
+  | DirtyFieldsType[];
+
+export function getDirtyValues<T extends Record<string, unknown>>(
+  dirtyFields: Partial<Record<keyof T, DirtyFieldsType>>,
+  values: T
+): Partial<T> {
+  const dirtyValues = Object.keys(dirtyFields).reduce((prev, key) => {
+    const value = dirtyFields[key];
+    if (!value) {
+      return prev;
+    }
+    const isObject = typeof value === "object";
+    const isArray = Array.isArray(value);
+    const nestedValue =
+      isObject && !isArray
+        ? getDirtyValues(
+            value as Record<string, DirtyFieldsType>,
+            values[key] as Record<string, unknown>
+          )
+        : values[key];
+    return { ...prev, [key]: isArray ? values[key] : nestedValue };
+  }, {} as Partial<T>);
+  return dirtyValues;
+}
+
+export function RecipeForm({
+  categories,
+  initialRecipe,
+  mutationError,
+  type,
+  onSubmit: onSubmitProp,
+}: RecipeFormProps) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, startTransition] = useTransition();
-  const [createRecipe, { error: mutationError }] = useMutation<
-    MutationResult,
-    { data: GqlCreateRecipeInput }
-  >(CREATE_RECIPE);
 
-  const form = useForm<RecipeFormData>({
-    resolver: zodResolver(zSchema),
+  const form = useForm({
+    resolver: zodResolver(recipeFormSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      prepTime: "",
-      cookTime: "",
-      servings: 0,
-      instructions: [""],
-      ingredients: [{ name: "", amount: "", unit: "" }],
+      type,
+      id: initialRecipe?.id,
+      categoryId: initialRecipe?.category?.id || undefined,
+      title: initialRecipe?.title || "",
+      description: initialRecipe?.description || "",
+      prepTime: initialRecipe?.prepTime || "",
+      cookTime: initialRecipe?.cookTime || "",
+      servings: initialRecipe?.servings || 0,
+      instructions: initialRecipe?.instructions || [""],
+      ingredients: initialRecipe?.ingredients
+        ? initialRecipe.ingredients.map(({ name, amount, unit }) => ({
+            name,
+            amount,
+            unit,
+          }))
+        : [{ name: "", amount: "", unit: "" }],
     },
   });
   const { control, handleSubmit, getValues, setValue, watch } = form;
@@ -130,7 +178,10 @@ export function RecipeForm({ categories }: RecipeFormProps) {
     fields: ingredientFields,
     append: appendIngredient,
     remove: removeIngredient,
-  } = useFieldArray({ control, name: "ingredients" });
+  } = useFieldArray({
+    control,
+    name: "ingredients",
+  });
 
   const instructions = watch("instructions");
 
@@ -166,15 +217,23 @@ export function RecipeForm({ categories }: RecipeFormProps) {
 
   const onSubmit = async () => {
     try {
-      const { servings, ...values } = getValues();
-      const { data } = await createRecipe({
-        variables: {
-          data: { ...values, servings: parseInt(String(servings), 10) },
-        },
-      });
+      const {
+        servings,
+        type: _type,
+        instructions,
+        ingredients,
+        ...values
+      } = getDirtyValues(form.formState.dirtyFields, getValues());
 
-      router.push(`/recipes/${data!.createRecipe.id}`);
-      router.refresh();
+      const variables = {
+        ...values,
+        servings: servings ? parseInt(String(servings), 10) : undefined,
+        instructions: instructions ? Object.values(instructions) : undefined,
+        ingredients: ingredients ? Object.values(ingredients) : undefined,
+        id: type === "update" && initialRecipe!.id,
+      } as RecipeFormData;
+
+      await onSubmitProp(variables);
     } catch (err) {
       console.error("Error creating recipe:", err);
     }
@@ -346,27 +405,31 @@ export function RecipeForm({ categories }: RecipeFormProps) {
                       )}
                     />
 
-                    <FormField
+                    <Controller
                       control={control}
                       name={`ingredients.${index}.unit`}
-                      render={({ fieldState: { error } }) => (
-                        <FormItem className="grid flex-1 gap-1">
-                          <FormLabel className="text-xs">Unit</FormLabel>
-                          <FormControl>
-                            <Combobox
-                              buttonProps={{
-                                "aria-invalid": !!error,
-                                placeholder: "Select a unit",
-                              }}
-                              commandProps={{ placeholder: "Search units" }}
-                              items={{ itemsGrouped: unitItems }}
-                              onSelect={(value: string) => {
-                                setValue(`ingredients.${index}.unit`, value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      render={({ field, fieldState: { error } }) => (
+                        <div className="grid flex-1 gap-1">
+                          <Label className="text-xs">Unit</Label>
+                          <Combobox
+                            buttonProps={{
+                              "aria-invalid": !!error,
+                              placeholder: "Select a unit",
+                            }}
+                            commandProps={{ placeholder: "Search units" }}
+                            items={{ itemsGrouped: unitItems }}
+                            value={field.value}
+                            onChange={(v) => {
+                              watch(`ingredients.${index}.unit`);
+                              field.onChange(v);
+                            }}
+                          />
+                          {error?.message && (
+                            <p className="text-destructive-foreground text-sm">
+                              {error.message}
+                            </p>
+                          )}
+                        </div>
                       )}
                     />
 
@@ -417,23 +480,20 @@ export function RecipeForm({ categories }: RecipeFormProps) {
                       {index + 1}
                     </div>
 
-                    <Controller
+                    <FormField
                       control={control}
                       name={`instructions.${index}`}
-                      render={({ field, fieldState: { error } }) => (
-                        <div className="grid flex-1 gap-1">
-                          <Textarea
-                            aria-invalid={!!error}
-                            placeholder={`Step ${index + 1}`}
-                            rows={2}
-                            {...field}
-                          />
-                          {error?.message && (
-                            <p className="text-destructive-foreground text-sm">
-                              {error.message}
-                            </p>
-                          )}
-                        </div>
+                      render={({ field }) => (
+                        <FormItem className="grid flex-1 gap-1">
+                          <FormControl>
+                            <Textarea
+                              placeholder={`Step ${index + 1}`}
+                              rows={2}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
                     />
 
@@ -466,8 +526,17 @@ export function RecipeForm({ categories }: RecipeFormProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Creating..." : "Create Recipe"}
+              <Button
+                type="submit"
+                disabled={loading || !form.formState.isDirty}
+              >
+                {loading
+                  ? type === "create"
+                    ? "Creating..."
+                    : "Updating..."
+                  : type === "create"
+                  ? "Create Recipe"
+                  : "Update Recipe"}
               </Button>
             </div>
           </form>

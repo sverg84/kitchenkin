@@ -15,6 +15,9 @@ export const GET_RECIPE = gql`
   query GetRecipe($id: ID!) {
     recipe(id: $id) {
       ...GqlRecipe_commonDetails
+      allergens
+      authorId
+      servings
       ingredients {
         id
         name

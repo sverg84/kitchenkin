@@ -6,11 +6,11 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
-import type { GqlRecipe } from "@/lib/generated/graphql";
-import { RecipeImage } from "./recipe/recipe-image";
+import { RecipeImage } from "./recipe-image";
+import { RecipeEntity } from "@/lib/graphql/entities/recipe";
 
 interface RecipeCardProps {
-  recipe: GqlRecipe;
+  recipe: RecipeEntity;
 }
 
 export function RecipeCard({ recipe }: RecipeCardProps) {

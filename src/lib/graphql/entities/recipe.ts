@@ -1,8 +1,11 @@
-import { ObjectType, Field, ID } from "type-graphql";
+import { ObjectType, Field, ID, registerEnumType } from "type-graphql";
 import { CategoryEntity } from "./category";
 import { IngredientEntity } from "./ingredient";
 import { IsOptional } from "class-validator";
 import { ImageEntity } from "./image";
+import { Allergen } from "@prisma/client";
+
+registerEnumType(Allergen, { name: "Allergen" });
 
 @ObjectType("GqlRecipe")
 export class RecipeEntity {
@@ -14,6 +17,9 @@ export class RecipeEntity {
 
   @Field()
   description: string;
+
+  @Field(() => ID)
+  authorId: string;
 
   @IsOptional()
   @Field(() => ImageEntity, { nullable: true })
@@ -36,6 +42,9 @@ export class RecipeEntity {
 
   @Field(() => [IngredientEntity])
   ingredients: IngredientEntity[];
+
+  @Field(() => [Allergen])
+  allergens: Allergen[];
 
   @Field()
   createdAt: Date;

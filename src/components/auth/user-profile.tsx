@@ -10,13 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RecipeCard } from "@/components/recipe-card";
+import { RecipeCard } from "@/components/recipe/recipe-card";
 import { Plus } from "lucide-react";
-import { GqlRecipe } from "@/lib/generated/graphql";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { UserProfileTabType } from "@/lib/auth/types";
 import { useRouter } from "nextjs-toploader/app";
+import type { RecipeEntity } from "@/lib/graphql/entities/recipe";
 
 interface UserProfileProps {
   activeTab: UserProfileTabType;
@@ -26,8 +26,8 @@ interface UserProfileProps {
     email?: string | null;
     image?: string | null;
   };
-  recipes: GqlRecipe[];
-  favorites: GqlRecipe[];
+  recipes: RecipeEntity[];
+  favorites: RecipeEntity[];
 }
 
 const MotionTabsList = motion.create(TabsList);
@@ -139,7 +139,7 @@ export function UserProfile({
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">My Recipes</h2>
             <Button asChild>
-              <Link href="/recipes/new">
+              <Link href="/recipe/new">
                 <Plus className="mr-2 size-4" />
                 Create Recipe
               </Link>
@@ -153,7 +153,7 @@ export function UserProfile({
                   You haven&apos;t created any recipes yet.
                 </p>
                 <Button asChild>
-                  <Link href="/recipes/new">
+                  <Link href="/recipe/new">
                     <Plus className="mr-2 size-4" />
                     Create Your First Recipe
                   </Link>
@@ -163,7 +163,7 @@ export function UserProfile({
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {recipes.map((recipe) => (
-                <Link key={recipe.id} href={`/recipes/${recipe.id}`}>
+                <Link key={recipe.id} href={`/recipe/${recipe.id}`}>
                   <RecipeCard recipe={recipe} />
                 </Link>
               ))}
@@ -187,7 +187,7 @@ export function UserProfile({
             ) : (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {favorites.map((recipe) => (
-                  <Link key={recipe.id} href={`/recipes/${recipe.id}`}>
+                  <Link key={recipe.id} href={`/recipe/${recipe.id}`}>
                     <RecipeCard recipe={recipe} />
                   </Link>
                 ))}

@@ -3,8 +3,21 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum Allergen {
+  Dairy
+  Eggs
+  Fish
+  Peanuts
+  Sesame
+  Shellfish
+  Soy
+  TreeNuts
+  Wheat
 }
 
 model Recipe {
@@ -20,11 +33,14 @@ model Recipe {
   category     Category     @relation(fields: [categoryId], references: [id])
   categoryId   String
   ingredients  Ingredient[]
-  author       User?        @relation(name: "AuthoredRecipes", fields: [authorId], references: [id])
-  authorId     String?
+  allergens    Allergen[]
+  author       User         @relation(name: "AuthoredRecipes", fields: [authorId], references: [id])
+  authorId     String
   favoritedBy  User[]       @relation(name: "FavoritedRecipes")
   image        Image?
   imageId      String?      @unique
+
+  @@index([authorId])
 }
 
 model Image {

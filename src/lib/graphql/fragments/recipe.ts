@@ -8,6 +8,7 @@ export const RecipeFragment = gql`
     prepTime
     cookTime
     category {
+      id
       name
     }
     image {
