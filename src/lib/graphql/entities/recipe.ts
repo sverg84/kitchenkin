@@ -21,6 +21,9 @@ export class RecipeEntity {
   @Field(() => ID)
   authorId: string;
 
+  @Field()
+  authorName: string;
+
   @IsOptional()
   @Field(() => ImageEntity, { nullable: true })
   image?: ImageEntity;

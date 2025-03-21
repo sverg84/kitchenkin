@@ -45,6 +45,24 @@ export class RecipeResolver {
     return authorId;
   }
 
+  @FieldResolver(() => String)
+  async authorName(@Root() recipe: RecipeEntity): Promise<string | null> {
+    const {
+      author: { name },
+    } = await prisma.recipe.findUniqueOrThrow({
+      where: { id: recipe.id },
+      select: {
+        author: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    return name;
+  }
+
   @Query(() => [RecipeEntity])
   async recipes() {
     return await prisma.recipe.findMany({

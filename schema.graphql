@@ -70,6 +70,7 @@ input GqlIngredientInput {
 type GqlRecipe {
   allergens: [Allergen!]!
   authorId: ID!
+  authorName: String!
   category: GqlCategory!
   cookTime: String!
   createdAt: DateTimeISO!

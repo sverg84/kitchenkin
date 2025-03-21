@@ -44,7 +44,10 @@ export default async function RecipePage({
           )}
         </div>
         <div>
-          <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>
+          <h1 className="text-3xl font-bold">{recipe.title}</h1>
+          <p className="mb-2">
+            {recipe.authorName ? `by ${recipe.authorName}` : ""}
+          </p>
           <p className="text-muted-foreground mb-4">{recipe.description}</p>
           <div className="flex flex-wrap gap-2 mb-4 items-center">
             <Badge>{recipe.category.name}</Badge>

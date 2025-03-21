@@ -17,6 +17,7 @@ export const GET_RECIPE = gql`
       ...GqlRecipe_commonDetails
       allergens
       authorId
+      authorName
       servings
       ingredients {
         id
