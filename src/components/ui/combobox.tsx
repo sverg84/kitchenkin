@@ -142,6 +142,17 @@ function ItemList({
   onSelect: (value: string) => void;
   onValueChange: (value: string) => void;
 }) {
+  const ItemElement = ({ item }: { item: Item }) => (
+    <CommandItem
+      data-value={`${item.label} ${item.value}`}
+      onSelect={() => {
+        onSelect(item.value);
+      }}
+    >
+      {item.label} ({item.value})
+    </CommandItem>
+  );
+
   return (
     <Command>
       <CommandInput
@@ -154,15 +165,7 @@ function ItemList({
         {itemsFlat && (
           <CommandGroup>
             {itemsFlat.map((item) => (
-              <CommandItem
-                key={item.value}
-                data-value={`${item.label} ${item.value}`}
-                onSelect={() => {
-                  onSelect(item.value);
-                }}
-              >
-                {item.label} ({item.value})
-              </CommandItem>
+              <ItemElement key={item.value} item={item} />
             ))}
           </CommandGroup>
         )}
@@ -171,13 +174,7 @@ function ItemList({
             <div key={group}>
               <CommandGroup heading={group}>
                 {items.map((item) => (
-                  <CommandItem
-                    key={item.value}
-                    data-value={`${item.label} ${item.value}`}
-                    onSelect={() => onSelect(item.value)}
-                  >
-                    {item.label} ({item.value})
-                  </CommandItem>
+                  <ItemElement key={item.value} item={item} />
                 ))}
               </CommandGroup>
               {index < groups.length - 1 && <CommandSeparator />}

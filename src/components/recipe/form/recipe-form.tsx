@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -28,9 +26,10 @@ import {
 import { Trash2, Plus } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition, useRef } from "react";
-import { ApolloError } from "@apollo/client";
-import { RecipeEntity } from "@/lib/graphql/entities/recipe";
+import { useTransition, useRef, useActionState } from "react";
+import type { RecipeEntity } from "@/lib/graphql/entities/recipe";
+import { createRecipe, updateRecipe } from "@/lib/prisma/server-actions";
+import { Spinner } from "@/components/ui/spinner";
 
 const unitItems = {
   capacity: [
@@ -103,10 +102,8 @@ interface Category {
 
 interface RecipeFormProps {
   categories: Category[];
-  mutationError: ApolloError | undefined;
   initialRecipe: RecipeEntity | undefined;
   type: "create" | "update";
-  onSubmit: (variables: RecipeFormData) => Promise<void>;
 }
 
 export type DirtyFieldsType =
@@ -143,13 +140,16 @@ export function getDirtyValues<T extends Record<string, unknown>>(
 export function RecipeForm({
   categories,
   initialRecipe,
-  mutationError,
   type,
-  onSubmit: onSubmitProp,
 }: RecipeFormProps) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, startTransition] = useTransition();
+
+  const [message, action] = useActionState(
+    type === "create" ? createRecipe : updateRecipe,
+    null
+  );
 
   const form = useForm({
     resolver: zodResolver(recipeFormSchema),
@@ -215,8 +215,8 @@ export function RecipeForm({
     reader.readAsDataURL(imageFile);
   };
 
-  const onSubmit = async () => {
-    try {
+  const onSubmit = () => {
+    startTransition(async () => {
       const {
         servings,
         type: _type,
@@ -233,24 +233,15 @@ export function RecipeForm({
         id: type === "update" && initialRecipe!.id,
       } as RecipeFormData;
 
-      await onSubmitProp(variables);
-    } catch (err) {
-      console.error("Error creating recipe:", err);
-    }
+      action(variables);
+    });
   };
 
   return (
     <Card>
       <CardContent className="pt-6">
         <Form {...form}>
-          <form
-            onSubmit={handleSubmit(() => {
-              startTransition(async () => {
-                await onSubmit();
-              });
-            })}
-            className="space-y-6"
-          >
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
               <div className="grid grid-cols-3">
                 <div className="col-2 flex flex-col justify-center gap-y-2">
@@ -263,6 +254,7 @@ export function RecipeForm({
                     onChange={handleImageFileChange}
                   />
                   <Button
+                    disabled={loading}
                     onClick={(e) => {
                       e.preventDefault();
                       imageInputRef?.current?.click();
@@ -283,7 +275,7 @@ export function RecipeForm({
                   <FormItem>
                     <FormLabel>Recipe Title</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} disabled={loading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -296,7 +288,7 @@ export function RecipeForm({
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea {...field} disabled={loading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -311,7 +303,11 @@ export function RecipeForm({
                     <FormItem>
                       <FormLabel>Prep Time</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 15 min" {...field} />
+                        <Input
+                          {...field}
+                          disabled={loading}
+                          placeholder="e.g. 15 min"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -324,7 +320,11 @@ export function RecipeForm({
                     <FormItem>
                       <FormLabel>Cook Time</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 30 min" {...field} />
+                        <Input
+                          {...field}
+                          disabled={loading}
+                          placeholder="e.g. 30 min"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -337,7 +337,7 @@ export function RecipeForm({
                     <FormItem>
                       <FormLabel>Servings</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input {...field} disabled={loading} type="number" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -353,6 +353,7 @@ export function RecipeForm({
                     <FormLabel>Category</FormLabel>
                     <FormControl>
                       <Select
+                        disabled={loading}
                         value={field.value}
                         onValueChange={field.onChange}
                       >
@@ -377,6 +378,7 @@ export function RecipeForm({
                 <div className="flex items-center justify-between">
                   <Label>Ingredients</Label>
                   <Button
+                    disabled={loading}
                     type="button"
                     variant="outline"
                     size="sm"
@@ -398,7 +400,11 @@ export function RecipeForm({
                         <FormItem className="grid flex-1 gap-1">
                           <FormLabel className="text-xs">Amount</FormLabel>
                           <FormControl>
-                            <Input placeholder="2" {...field} />
+                            <Input
+                              {...field}
+                              disabled={loading}
+                              placeholder="2"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -414,6 +420,7 @@ export function RecipeForm({
                           <Combobox
                             buttonProps={{
                               "aria-invalid": !!error,
+                              disabled: loading,
                               placeholder: "Select a unit",
                             }}
                             commandProps={{ placeholder: "Search units" }}
@@ -440,7 +447,11 @@ export function RecipeForm({
                         <FormItem className="grid flex-[3] gap-1">
                           <FormLabel className="text-xs">Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Olive oil" {...field} />
+                            <Input
+                              {...field}
+                              disabled={loading}
+                              placeholder="Olive oil"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -452,7 +463,7 @@ export function RecipeForm({
                       variant="ghost"
                       size="icon"
                       onClick={() => removeIngredient(index)}
-                      disabled={ingredientFields.length === 1}
+                      disabled={loading || ingredientFields.length === 1}
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -464,6 +475,7 @@ export function RecipeForm({
                 <div className="flex items-center justify-between">
                   <Label>Instructions</Label>
                   <Button
+                    disabled={loading}
                     type="button"
                     variant="outline"
                     size="sm"
@@ -487,9 +499,10 @@ export function RecipeForm({
                         <FormItem className="grid flex-1 gap-1">
                           <FormControl>
                             <Textarea
+                              {...field}
+                              disabled={loading}
                               placeholder={`Step ${index + 1}`}
                               rows={2}
-                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -502,7 +515,7 @@ export function RecipeForm({
                       variant="ghost"
                       size="icon"
                       onClick={() => handleRemoveInstruction(index)}
-                      disabled={instructions.length === 1}
+                      disabled={loading || instructions.length === 1}
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -511,15 +524,13 @@ export function RecipeForm({
               </div>
             </div>
 
-            {mutationError && (
-              <p className="text-sm text-destructive-foreground">
-                {mutationError.message ||
-                  "An error occurred. Please try again."}
-              </p>
+            {!!message && (
+              <p className="text-sm text-destructive-foreground">{message}</p>
             )}
 
             <div className="flex justify-end gap-2">
               <Button
+                disabled={loading}
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
@@ -537,6 +548,7 @@ export function RecipeForm({
                   : type === "create"
                   ? "Create Recipe"
                   : "Update Recipe"}
+                {loading && <Spinner size="sm" />}
               </Button>
             </div>
           </form>

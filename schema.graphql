@@ -26,18 +26,6 @@ type GqlCategory {
   recipes: [GqlRecipe!]!
 }
 
-input GqlCreateRecipeInput {
-  categoryId: String!
-  cookTime: String!
-  description: String!
-  image: GqlImageInput
-  ingredients: [GqlIngredientInput!]!
-  instructions: [String!]!
-  prepTime: String!
-  servings: Float!
-  title: String!
-}
-
 type GqlImage {
   id: ID!
   large: String!
@@ -47,23 +35,11 @@ type GqlImage {
   small: String!
 }
 
-input GqlImageInput {
-  encoded: String!
-  fileName: String!
-  fileType: String!
-}
-
 type GqlIngredient {
   amount: String!
   id: ID!
   name: String!
   recipes: [GqlRecipe!]!
-  unit: String!
-}
-
-input GqlIngredientInput {
-  amount: String!
-  name: String!
   unit: String!
 }
 
@@ -83,25 +59,6 @@ type GqlRecipe {
   servings: Float!
   title: String!
   updatedAt: DateTimeISO!
-}
-
-input GqlUpdateRecipeInput {
-  categoryId: String
-  cookTime: String
-  description: String
-  id: ID!
-  image: GqlImageInput
-  ingredients: [GqlIngredientInput!]
-  instructions: [String!]
-  prepTime: String
-  servings: Int
-  title: String
-}
-
-type Mutation {
-  createRecipe(data: GqlCreateRecipeInput!): GqlRecipe!
-  deleteRecipe(id: String!): GqlRecipe
-  updateRecipe(data: GqlUpdateRecipeInput!): GqlRecipe!
 }
 
 type Query {

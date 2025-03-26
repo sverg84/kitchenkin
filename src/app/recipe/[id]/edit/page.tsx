@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { EditRecipeFormWrapper } from "@/components/recipe/form/edit-form-wrapper";
+import { RecipeFormWrapper } from "@/components/recipe/form/recipe-form-wrapper";
 import { getCategories, getRecipe } from "@/lib/graphql/server-fetch";
 import { notFound, redirect, unauthorized } from "next/navigation";
 
@@ -30,6 +30,10 @@ export default async function EditRecipePage({
   }
 
   return (
-    <EditRecipeFormWrapper categories={categories} initialRecipe={recipe} />
+    <RecipeFormWrapper
+      categories={categories}
+      formMode="update"
+      initialRecipe={recipe}
+    />
   );
 }

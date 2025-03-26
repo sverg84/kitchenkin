@@ -1,6 +1,6 @@
 import type { Allergen } from "@prisma/client";
-import type { ImageInput } from "../../inputs/image-input";
-import type { UpdateRecipeInput } from "../../inputs/recipe-input";
+import type { ImageInput } from "../graphql/inputs/image-input";
+import type { UpdateRecipeInput } from "../graphql/inputs/recipe-input";
 
 const fileTypes = [
   "image/jpg",
@@ -43,8 +43,8 @@ export async function imageCreateHandler({
   });
 
   if (!imageResponse.ok) {
-    const { error } = await imageResponse.json();
-    throw new Error(error);
+    const { message } = await imageResponse.json();
+    throw new Error(message);
   }
 
   return await imageResponse.json();
@@ -88,8 +88,8 @@ export async function detectAllergens(
   });
 
   if (!response.ok) {
-    const { error } = await response.json();
-    throw new Error(error);
+    const { message } = await response.json();
+    throw new Error(message);
   }
 
   const { allergens } = await response.json();
