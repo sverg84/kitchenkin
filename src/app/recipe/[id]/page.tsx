@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Edit } from "lucide-react";
+import { ArrowLeft, Clock, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,15 @@ import { notFound } from "next/navigation";
 import { RecipeImage } from "@/components/recipe/recipe-image";
 import { auth } from "@/auth";
 import { Allergen } from "@prisma/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { RecipeDeleteDialogButtons } from "@/components/recipe/delete-dialog-buttons";
 
 export default async function RecipePage({
   params,
@@ -35,12 +44,30 @@ export default async function RecipePage({
             <RecipeImage recipe={recipe} priority={true} />
           </div>
           {session?.user?.id === recipe.authorId && (
-            <Link className="self-center" href={`/recipe/${recipe.id}/edit`}>
-              <Button>
-                <label>Edit</label>
-                <Edit />
-              </Button>
-            </Link>
+            <div className="self-center flex gap-x-2">
+              <Link href={`/recipe/${recipe.id}/edit`}>
+                <Button variant="secondary">
+                  <label>Edit</label>
+                  <Edit />
+                </Button>
+              </Link>
+              <Dialog>
+                <DialogTrigger asChild={true}>
+                  <Button variant="destructive">
+                    <Trash2 />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent showCloseButton={false}>
+                  <DialogHeader>
+                    <DialogTitle>Are you sure?</DialogTitle>
+                  </DialogHeader>
+                  This cannot be undone.
+                  <DialogFooter>
+                    <RecipeDeleteDialogButtons recipeId={recipe.id} />
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           )}
         </div>
         <div>

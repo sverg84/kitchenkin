@@ -155,7 +155,7 @@ export function RecipeForm({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
       type,
-      id: initialRecipe?.id,
+      ...(type === "update" ? { id: initialRecipe?.id } : null),
       categoryId: initialRecipe?.category?.id || undefined,
       title: initialRecipe?.title || "",
       description: initialRecipe?.description || "",
@@ -230,7 +230,7 @@ export function RecipeForm({
         servings: servings ? parseInt(String(servings), 10) : undefined,
         instructions: instructions ? Object.values(instructions) : undefined,
         ingredients: ingredients ? Object.values(ingredients) : undefined,
-        id: type === "update" && initialRecipe!.id,
+        id: type === "update" ? initialRecipe!.id : undefined,
       } as RecipeFormData;
 
       action(variables);
