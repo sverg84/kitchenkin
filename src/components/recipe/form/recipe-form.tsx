@@ -57,12 +57,12 @@ const createSchema = z.strictObject({
   description: z.string().trim().nonempty(),
   prepTime: z.string().trim().regex(recipeTimePattern),
   cookTime: z.string().trim().regex(recipeTimePattern),
-  servings: z.coerce.number().gt(0),
-  categoryId: z.string().cuid(),
+  servings: z.coerce.number().int().gt(0),
+  categoryId: z.cuid(),
   instructions: z.array(z.string().trim().nonempty()),
   image: z
     .strictObject({
-      encoded: z.string().base64().nonempty(),
+      encoded: z.base64().nonempty(),
       fileName: z.string().nonempty(),
       fileType: z.string().nonempty(),
     })
@@ -106,7 +106,7 @@ interface RecipeFormProps {
   type: "create" | "update";
 }
 
-export type DirtyFieldsType =
+type DirtyFieldsType =
   | boolean
   | null
   | {
@@ -114,7 +114,7 @@ export type DirtyFieldsType =
     }
   | DirtyFieldsType[];
 
-export function getDirtyValues<T extends Record<string, unknown>>(
+function getDirtyValues<T extends Record<string, unknown>>(
   dirtyFields: Partial<Record<keyof T, DirtyFieldsType>>,
   values: T
 ): Partial<T> {
@@ -333,11 +333,16 @@ export function RecipeForm({
                 <FormField
                   control={control}
                   name="servings"
-                  render={({ field }) => (
+                  render={({ field: { value, ...field } }) => (
                     <FormItem>
                       <FormLabel>Servings</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={loading} type="number" />
+                        <Input
+                          {...field}
+                          value={String(value)}
+                          disabled={loading}
+                          type="number"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
