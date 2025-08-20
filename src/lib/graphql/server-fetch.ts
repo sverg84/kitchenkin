@@ -1,4 +1,4 @@
-import { getClient } from "./client/apollo-client";
+import { getClient } from "./client/apollo-client-server-factory";
 import { gql } from "@apollo/client";
 import type { RecipeEntity } from "./entities/recipe";
 
