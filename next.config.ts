@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverExternalPackages: process.env.TURBOPACK
+    ? [
+        "@pothos/core",
+        "@pothos/plugin-relay",
+        "@pothos/plugin-prisma",
+        "graphql",
+      ]
+    : ["graphql"],
 };
 
 export default nextConfig;

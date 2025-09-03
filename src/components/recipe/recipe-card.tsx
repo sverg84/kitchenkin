@@ -7,10 +7,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
 import { RecipeImage } from "./recipe-image";
-import { RecipeEntity } from "@/lib/graphql/entities/recipe";
+import { Recipe } from "@/lib/generated/graphql/graphql";
 
 interface RecipeCardProps {
-  recipe: RecipeEntity;
+  recipe: Recipe;
 }
 
 export function RecipeCard({ recipe }: RecipeCardProps) {

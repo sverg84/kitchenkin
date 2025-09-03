@@ -6,11 +6,7 @@ import type {
   CreateRecipeInput,
   UpdateRecipeInput,
 } from "../graphql/inputs/recipe-input";
-import {
-  imageCreateHandler,
-  detectAllergens,
-  deleteImageInS3,
-} from "@/lib/lambda";
+import { detectAllergens, deleteImageInS3 } from "@/lib/lambda";
 import { IngredientInput } from "../graphql/inputs/ingredient-input";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -68,13 +64,9 @@ export async function createRecipe(
     const userId = await authorizedInvariant();
 
     const input = data as CreateRecipeInput;
-    const { image: imageInput, ingredients, categoryId, ...recipeData } = input;
+    const { image: imageData, ingredients, categoryId, ...recipeData } = input;
 
-    const [imageData, allergens] = await Promise.all([
-      imageInput ? imageCreateHandler(imageInput) : undefined,
-      detectAllergens(input),
-    ]);
-
+    const allergens = await detectAllergens(input);
     recipe = await prisma.recipe.create({
       data: {
         ...recipeData,
@@ -97,11 +89,7 @@ export async function createRecipe(
             }
           : undefined,
       },
-      include: {
-        category: true,
-        ingredients: true,
-        image: true,
-      },
+      select: { id: true },
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -140,15 +128,15 @@ export async function updateRecipe(
       ...recipeData
     } = input;
 
-    const [imageData, allergens] = await Promise.all([
-      imageInput ? imageCreateHandler(imageInput) : undefined,
-      recipeData.title && ingredients ? detectAllergens(input) : undefined,
-    ]);
+    const allergens =
+      recipeData.title && ingredients
+        ? await detectAllergens(input)
+        : undefined;
 
     recipe = await prisma.$transaction(async (client) => {
       // If the image is replaced or removed, delete the old one
       if (imageInput === null || imageInput) {
-        await client.image.delete({ where: { recipeId: id } });
+        await client.image.deleteMany({ where: { recipeId: id } });
       }
 
       return await client.recipe.update({
@@ -167,17 +155,13 @@ export async function updateRecipe(
                 ...ingredientsInputToDbOperation(ingredients),
               }
             : undefined,
-          image: imageData
+          image: imageInput
             ? {
-                create: imageData,
+                create: imageInput,
               }
             : undefined,
         },
-        include: {
-          category: true,
-          ingredients: true,
-          image: true,
-        },
+        select: { id: true },
       });
     });
   } catch (error) {

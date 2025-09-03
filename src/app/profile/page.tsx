@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { UserProfile } from "@/components/auth/user-profile";
 import { UserProfileTabType } from "@/lib/auth/types";
 import { getRecipesByUser } from "@/lib/graphql/server-fetch";
+import { Recipe } from "@/lib/generated/graphql/graphql";
 
 export default async function ProfilePage({
   searchParams,
@@ -19,7 +20,7 @@ export default async function ProfilePage({
   const activeTab = params.tab as UserProfileTabType;
 
   const recipes = activeTab === "recipes" ? await getRecipesByUser() : [];
-  const favorites = activeTab === "favorites" ? [] : [];
+  const favorites: Recipe[] = activeTab === "favorites" ? [] : [];
 
   return (
     <div className="mx-auto px-4 py-8 max-w-7xl">

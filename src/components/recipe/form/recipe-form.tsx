@@ -26,10 +26,10 @@ import {
 import { Trash2, Plus } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition, useRef, useActionState } from "react";
-import type { RecipeEntity } from "@/lib/graphql/entities/recipe";
+import { startTransition, useRef, useActionState, useState } from "react";
 import { createRecipe, updateRecipe } from "@/lib/prisma/server-actions";
 import { Spinner } from "@/components/ui/spinner";
+import type { Category, Recipe } from "@/lib/generated/graphql/graphql";
 
 const unitItems = {
   capacity: [
@@ -95,46 +95,10 @@ const recipeFormSchema = z.discriminatedUnion("type", [
 
 type RecipeFormData = z.infer<typeof recipeFormSchema>;
 
-interface Category {
-  id: string;
-  name: string;
-}
-
 interface RecipeFormProps {
   categories: Category[];
-  initialRecipe: RecipeEntity | undefined;
+  initialRecipe: Recipe | undefined;
   type: "create" | "update";
-}
-
-type DirtyFieldsType =
-  | boolean
-  | null
-  | {
-      [key: string]: DirtyFieldsType;
-    }
-  | DirtyFieldsType[];
-
-function getDirtyValues<T extends Record<string, unknown>>(
-  dirtyFields: Partial<Record<keyof T, DirtyFieldsType>>,
-  values: T
-): Partial<T> {
-  const dirtyValues = Object.keys(dirtyFields).reduce((prev, key) => {
-    const value = dirtyFields[key];
-    if (!value) {
-      return prev;
-    }
-    const isObject = typeof value === "object";
-    const isArray = Array.isArray(value);
-    const nestedValue =
-      isObject && !isArray
-        ? getDirtyValues(
-            value as Record<string, DirtyFieldsType>,
-            values[key] as Record<string, unknown>
-          )
-        : values[key];
-    return { ...prev, [key]: isArray ? values[key] : nestedValue };
-  }, {} as Partial<T>);
-  return dirtyValues;
 }
 
 export function RecipeForm({
@@ -144,7 +108,7 @@ export function RecipeForm({
 }: RecipeFormProps) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const [loading, startTransition] = useTransition();
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [message, action] = useActionState(
     type === "create" ? createRecipe : updateRecipe,
@@ -155,8 +119,9 @@ export function RecipeForm({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
       type,
-      ...(type === "update" ? { id: initialRecipe?.id } : null),
-      categoryId: initialRecipe?.category?.id || undefined,
+      ...(type === "update" ? { id: initialRecipe?.rawId } : null),
+      image: undefined,
+      categoryId: initialRecipe?.category?.rawId || undefined,
       title: initialRecipe?.title || "",
       description: initialRecipe?.description || "",
       prepTime: initialRecipe?.prepTime || "",
@@ -174,6 +139,61 @@ export function RecipeForm({
   });
   const { control, handleSubmit, getValues, setValue, watch } = form;
 
+  function getDirtyValues(): Partial<RecipeFormData> {
+    const dirtyFields = form.formState.dirtyFields;
+    console.log("dirtyFields", dirtyFields);
+
+    const formValues = getValues();
+    console.log("values", formValues);
+
+    const dirtyValues: Record<string, unknown> = {};
+
+    for (const [key, val] of Object.entries(dirtyFields)) {
+      if (!val) {
+        continue;
+      }
+      switch (key) {
+        case "servings": {
+          const parsedServings = parseInt(String(formValues.servings), 10);
+          if (
+            !isNaN(parsedServings) &&
+            parsedServings !== initialRecipe?.servings
+          ) {
+            dirtyValues.servings = parsedServings;
+          }
+          break;
+        }
+        case "instructions": {
+          if (
+            (val as boolean[]).some(
+              (isInstructionDirty) => isInstructionDirty === true
+            )
+          ) {
+            dirtyValues[key] = formValues.instructions;
+          }
+          break;
+        }
+        case "ingredients": {
+          if (
+            (val as Record<string, boolean>[]).some((obj) =>
+              Object.values(obj).some((isFieldDirty) => isFieldDirty)
+            )
+          ) {
+            dirtyValues[key] = formValues.ingredients;
+          }
+          break;
+        }
+        default: {
+          dirtyValues[key] = formValues[key as keyof typeof formValues];
+          break;
+        }
+      }
+    }
+
+    console.log("dirtyValues", dirtyValues);
+    return dirtyValues;
+  }
+
   const {
     fields: ingredientFields,
     append: appendIngredient,
@@ -190,10 +210,18 @@ export function RecipeForm({
   };
 
   const handleRemoveInstruction = (index: number) => {
-    setValue(
-      "instructions",
-      instructions.filter((_, i) => i !== index)
-    );
+    const newInstructions = instructions.filter((_, i) => i !== index);
+    setValue("instructions", newInstructions);
+
+    // If instructions match initial value, mark as not dirty
+    const initialInstructions =
+      form.formState.defaultValues?.instructions ?? [];
+    if (
+      newInstructions.length === initialInstructions.length &&
+      JSON.stringify(newInstructions) === JSON.stringify(initialInstructions)
+    ) {
+      form.resetField("instructions", { keepDirty: false });
+    }
   };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,33 +235,68 @@ export function RecipeForm({
       // Remove data prefix to get base64 string of image
       const imageEncoded = reader.result!.toString().split(",")[1];
 
-      setValue("image.fileName", imageFile.name);
-      setValue("image.fileType", imageFile.type);
-      setValue("image.encoded", imageEncoded);
+      setValue(
+        "image",
+        {
+          fileName: imageFile.name,
+          fileType: imageFile.type,
+          encoded: imageEncoded,
+        },
+        { shouldDirty: true }
+      );
     };
 
     reader.readAsDataURL(imageFile);
   };
 
-  const onSubmit = () => {
-    startTransition(async () => {
-      const {
-        servings,
-        type: _type,
-        instructions,
-        ingredients,
-        ...values
-      } = getDirtyValues(form.formState.dirtyFields, getValues());
+  const onSubmit = async () => {
+    setLoading(true);
+    const { type: _type, ...restValues } = getDirtyValues();
 
-      const variables = {
-        ...values,
-        servings: servings ? parseInt(String(servings), 10) : undefined,
-        instructions: instructions ? Object.values(instructions) : undefined,
-        ingredients: ingredients ? Object.values(ingredients) : undefined,
-        id: type === "update" ? initialRecipe!.id : undefined,
-      } as RecipeFormData;
+    // Extend the type to allow imageData
+    type ValuesWithImageData = typeof restValues & {
+      id?: string;
+    };
+    const values: ValuesWithImageData = { ...restValues };
 
-      action(variables);
+    if (type === "update") {
+      values.id = initialRecipe!.rawId;
+    }
+
+    if (values.image) {
+      const { encoded, fileName, fileType } = values.image;
+      // Convert base64 to Blob for FormData
+      const byteString = atob(encoded);
+      const byteArray = new Uint8Array(byteString.length);
+      for (let i = 0; i < byteString.length; i++) {
+        byteArray[i] = byteString.charCodeAt(i);
+      }
+      const blob = new Blob([byteArray], { type: fileType });
+      // Use append with 3rd arg for filename
+      const imageFormData = new FormData();
+      imageFormData.append("image", blob, fileName);
+
+      const resp = await fetch("/api/image-upload", {
+        method: "POST",
+        body: imageFormData,
+      });
+
+      if (!resp.ok) {
+        const error = await resp.text();
+        setLoading(false);
+        throw new Error(error);
+      }
+
+      const imageData = await resp.json();
+      values.image = imageData;
+    }
+    startTransition(() => {
+      try {
+        action(values);
+      } catch (error) {
+        setLoading(false);
+        throw error;
+      }
     });
   };
 
@@ -367,7 +430,10 @@ export function RecipeForm({
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
+                            <SelectItem
+                              key={category.rawId}
+                              value={category.rawId}
+                            >
                               {category.name}
                             </SelectItem>
                           ))}

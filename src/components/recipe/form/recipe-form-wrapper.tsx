@@ -1,4 +1,4 @@
-import type { RecipeEntity } from "@/lib/graphql/entities/recipe";
+import { Category, Recipe } from "@/lib/generated/graphql/graphql";
 import { RecipeForm } from "./recipe-form";
 
 interface CreateProps {
@@ -8,14 +8,14 @@ interface CreateProps {
 
 interface EditProps {
   formMode: "update";
-  initialRecipe: RecipeEntity;
+  initialRecipe: Recipe;
 }
 
 type Pls = CreateProps | EditProps;
 
 type Props = Readonly<
   {
-    categories: { id: string; name: string }[];
+    categories: Category[];
   } & Pls
 >;
 

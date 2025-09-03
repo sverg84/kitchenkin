@@ -1,12 +1,16 @@
+import {
+  QueryCategoriesConnection,
+  QueryMyRecipesConnection,
+  Recipe,
+} from "../generated/graphql/graphql";
 import { getClient } from "./client/apollo-client-server-factory";
 import { gql } from "@apollo/client";
-import type { RecipeEntity } from "./entities/recipe";
 
 // Query definitions
 export const GET_RECIPES = gql`
   query GetRecipesServer {
     recipes {
-      ...GqlRecipe_commonDetails
+      __typename
     }
   }
 `;
@@ -16,8 +20,10 @@ export const GET_RECIPE = gql`
     recipe(id: $id) {
       ...GqlRecipe_commonDetails
       allergens
-      authorId
-      authorName
+      author {
+        rawId
+        name
+      }
       servings
       ingredients {
         id
@@ -33,7 +39,11 @@ export const GET_RECIPE = gql`
 export const GET_MY_RECIPES = gql`
   query GetMyRecipes {
     myRecipes {
-      ...GqlRecipe_commonDetails
+      edges {
+        node {
+          ...GqlRecipe_commonDetails
+        }
+      }
     }
   }
 `;
@@ -41,36 +51,31 @@ export const GET_MY_RECIPES = gql`
 export const GET_CATEGORIES = gql`
   query GetCategories {
     categories {
-      id
-      name
+      edges {
+        node {
+          rawId
+          name
+        }
+      }
     }
   }
 `;
 
 // Server-side fetch functions
-export async function getRecipes() {
-  const client = await getClient();
-
-  try {
-    const { data } = await client.query<{ recipes: RecipeEntity[] }>({
-      query: GET_RECIPES,
-    });
-    return data.recipes;
-  } catch (error) {
-    console.error("Error fetching recipes:", error);
-    return [];
-  }
-}
-
 export async function getRecipe(id: string) {
   const client = await getClient();
 
   try {
-    const { data } = await client.query<{ recipe: RecipeEntity }>({
+    const { data, error } = await client.query<{ recipe: Recipe }>({
       query: GET_RECIPE,
       variables: { id },
     });
-    return data.recipe;
+
+    if (error) {
+      throw error;
+    }
+
+    return data!.recipe;
   } catch (error) {
     console.error("Error fetching recipe:", error);
     return null;
@@ -81,10 +86,17 @@ export async function getRecipesByUser() {
   const client = await getClient();
 
   try {
-    const { data } = await client.query<{ myRecipes: RecipeEntity[] }>({
+    const { data, error } = await client.query<{
+      myRecipes: QueryMyRecipesConnection;
+    }>({
       query: GET_MY_RECIPES,
     });
-    return data.myRecipes;
+
+    if (error) {
+      throw error;
+    }
+
+    return data!.myRecipes.edges?.map((edge) => edge?.node);
   } catch (error) {
     console.error("Error fetching user recipes:", error);
     return [];
@@ -95,12 +107,17 @@ export async function getCategories() {
   const client = await getClient();
 
   try {
-    const { data } = await client.query<{
-      categories: { id: string; name: string }[];
+    const { data, error } = await client.query<{
+      categories: QueryCategoriesConnection;
     }>({
       query: GET_CATEGORIES,
     });
-    return data.categories;
+
+    if (error) {
+      throw error;
+    }
+
+    return data!.categories.edges?.map((edge) => edge?.node);
   } catch (error) {
     console.error("Error fetching categories:", error);
     return [];

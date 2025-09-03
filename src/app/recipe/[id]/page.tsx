@@ -43,9 +43,9 @@ export default async function RecipePage({
           <div className="relative aspect-video rounded-lg overflow-hidden">
             <RecipeImage recipe={recipe} priority={true} />
           </div>
-          {session?.user?.id === recipe.authorId && (
+          {session?.user?.id === recipe.author?.rawId && (
             <div className="self-center flex gap-x-2">
-              <Link href={`/recipe/${recipe.id}/edit`}>
+              <Link href={`/recipe/${recipe.rawId}/edit`}>
                 <Button variant="secondary">
                   <label>Edit</label>
                   <Edit />
@@ -63,7 +63,7 @@ export default async function RecipePage({
                   </DialogHeader>
                   This cannot be undone.
                   <DialogFooter>
-                    <RecipeDeleteDialogButtons recipeId={recipe.id} />
+                    <RecipeDeleteDialogButtons recipeId={recipe.rawId} />
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -73,11 +73,11 @@ export default async function RecipePage({
         <div>
           <h1 className="text-3xl font-bold">{recipe.title}</h1>
           <p className="mb-2">
-            {recipe.authorName ? `by ${recipe.authorName}` : ""}
+            {recipe.author?.name ? `by ${recipe.author.name}` : ""}
           </p>
           <p className="text-muted-foreground mb-4">{recipe.description}</p>
           <div className="flex flex-wrap gap-2 mb-4 items-center">
-            <Badge>{recipe.category.name}</Badge>
+            <Badge>{recipe.category?.name}</Badge>
             <div className="flex items-center">
               <Clock className="size-4 mr-1" />
               <span className="text-sm">Prep: {recipe.prepTime}</span>
@@ -89,7 +89,7 @@ export default async function RecipePage({
             <div className="text-sm">Servings: {recipe.servings}</div>
           </div>
           <ul className="flex flex-wrap gap-2 mb-4 items-center">
-            {recipe.allergens.map((allergen) => (
+            {recipe.allergens?.map((allergen) => (
               <li className="flex" key={allergen}>
                 <Badge variant="secondary">
                   {allergen === Allergen.TreeNuts ? "Tree Nuts" : allergen}
@@ -101,7 +101,7 @@ export default async function RecipePage({
           <div>
             <h2 className="text-xl font-semibold mb-4">Ingredients</h2>
             <ul className="list-disc pl-5 space-y-2 mb-6">
-              {recipe.ingredients.map((ingredient) => (
+              {recipe.ingredients?.map((ingredient) => (
                 <li key={ingredient.id}>
                   {ingredient.amount} {ingredient.unit} {ingredient.name}
                 </li>
@@ -109,7 +109,7 @@ export default async function RecipePage({
             </ul>
             <h2 className="text-xl font-semibold mb-4">Instructions</h2>
             <ol className="list-decimal pl-5 space-y-4">
-              {recipe.instructions.map((step, index) => (
+              {recipe.instructions?.map((step, index) => (
                 <li key={index}>{step}</li>
               ))}
             </ol>

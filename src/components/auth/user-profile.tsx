@@ -16,7 +16,7 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { UserProfileTabType } from "@/lib/auth/types";
 import { useRouter } from "nextjs-toploader/app";
-import type { RecipeEntity } from "@/lib/graphql/entities/recipe";
+import type { Recipe } from "@/lib/generated/graphql/graphql";
 
 interface UserProfileProps {
   activeTab: UserProfileTabType;
@@ -26,8 +26,8 @@ interface UserProfileProps {
     email?: string | null;
     image?: string | null;
   };
-  recipes: RecipeEntity[];
-  favorites: RecipeEntity[];
+  recipes: Recipe[];
+  favorites: Recipe[];
 }
 
 const MotionTabsList = motion.create(TabsList);

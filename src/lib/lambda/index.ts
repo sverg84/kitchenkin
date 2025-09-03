@@ -1,5 +1,4 @@
 import type { Allergen } from "@prisma/client";
-import type { ImageInput } from "../graphql/inputs/image-input";
 import type { UpdateRecipeInput } from "../graphql/inputs/recipe-input";
 
 const fileTypes = [
@@ -12,9 +11,15 @@ const fileTypes = [
 ];
 const validFileTypes = new Set(fileTypes);
 
+type ImageHandlerInput = {
+  fileName: string;
+  fileType: string;
+  encoded: string;
+};
+
 /**
  * Invoke Lambda function, add image to S3, return CloudFront URLs
- * @param {ImageInput} input the image input provided by the recipe form
+ * @param {ImageHandlerInput} input the image input provided by the recipe form
  * @param {string} input.fileName the name of the uploaded image file
  * @param {string} input.fileType the MIME type of the image file
  * @param {string} input.encoded the base64 encoded image data
@@ -24,7 +29,7 @@ export async function imageCreateHandler({
   fileName,
   fileType,
   encoded,
-}: ImageInput) {
+}: ImageHandlerInput) {
   // The image must be of a valid MIME type
   if (!validFileTypes.has(fileType)) {
     throw new Error(`File must be an image of type: ${fileTypes.join(", ")}`);

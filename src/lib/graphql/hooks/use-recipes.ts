@@ -1,27 +1,30 @@
 "use client";
 
-import { gql, useQuery } from "@apollo/client";
-import type { RecipeEntity } from "../entities/recipe";
+import type { Recipe } from "@/lib/generated/graphql/graphql";
+import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 
 const GET_RECIPES = gql`
   query GetRecipes {
     recipes {
-      id
-      title
-      description
-      prepTime
-      cookTime
-      category {
-        name
+      edges {
+        node {
+          id
+          title
+          description
+          prepTime
+          cookTime
+          category {
+            name
+          }
+        }
       }
     }
   }
 `;
 
 export function useRecipes() {
-  const { data, loading, error } = useQuery<{ recipes: RecipeEntity[] }>(
-    GET_RECIPES
-  );
+  const { data, loading, error } = useQuery<{ recipes: Recipe[] }>(GET_RECIPES);
 
   return {
     recipes: data?.recipes,

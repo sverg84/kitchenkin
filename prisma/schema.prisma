@@ -117,3 +117,7 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+generator pothos {
+  provider = "prisma-pothos-types"
+}

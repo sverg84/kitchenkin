@@ -1,18 +1,23 @@
 "use client";
 
-import { gql, useLazyQuery } from "@apollo/client";
-import type { RecipeEntity } from "../entities/recipe";
+import { gql } from "@apollo/client";
+import { useLazyQuery } from "@apollo/client/react";
+import type { Recipe } from "@/lib/generated/graphql/graphql";
 
 const SEARCH_RECIPES = gql`
   query SearchRecipes($query: String!) {
     searchRecipes(query: $query) {
-      id
-      title
-      description
-      prepTime
-      cookTime
-      category {
-        name
+      edges {
+        node {
+          id
+          title
+          description
+          prepTime
+          cookTime
+          category {
+            name
+          }
+        }
       }
     }
   }
@@ -20,7 +25,7 @@ const SEARCH_RECIPES = gql`
 
 export function useSearchRecipes() {
   const [searchRecipes, { data, loading, error }] = useLazyQuery<{
-    searchRecipes: RecipeEntity[];
+    searchRecipes: Recipe[];
   }>(SEARCH_RECIPES);
 
   const search = (query: string) => {

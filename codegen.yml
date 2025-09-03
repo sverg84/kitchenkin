@@ -1,8 +1,6 @@
-schema: "./schema.graphql"
-documents: "src/**/*.ts"
+schema: "http://localhost:3000/api/graphql"
+documents: "./src/**/*.ts"
 generates:
-  src/lib/generated/graphql.ts:
-    plugins:
-      - "typescript-type-graphql"
-    config:
-      # noCache: true
+  src/lib/generated/graphql/:
+    preset: client
+    plugins: []
