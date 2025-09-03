@@ -7,7 +7,7 @@ import { HttpLink } from "@apollo/client";
 export function makeClient(cookie?: string | null) {
   const link = new HttpLink({
     uri:
-      process.env.NEXT_PUBLIC_GRAPHQL_URL ||
+      process.env.NEXT_PUBLIC_GRAPHQL_URI ||
       "http://localhost:3000/api/graphql",
     credentials: "include",
     headers: { cookie: cookie ?? "" },
