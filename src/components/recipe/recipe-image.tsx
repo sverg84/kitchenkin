@@ -1,6 +1,6 @@
 "use client";
 
-import { Recipe } from "@/lib/generated/graphql/graphql";
+import type { Recipe } from "@/graphql";
 import type { ImageLoaderProps } from "next/image";
 import Image from "next/image";
 

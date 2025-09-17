@@ -23,7 +23,8 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/auth": ["./auth"]
+      "@/auth": ["./auth"],
+      "@/graphql": ["./src/lib/generated/graphql/graphql"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

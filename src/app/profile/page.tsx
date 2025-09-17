@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { UserProfile } from "@/components/auth/user-profile";
 import { UserProfileTabType } from "@/lib/auth/types";
 import { getRecipesByUser } from "@/lib/graphql/server-fetch";
-import { Recipe } from "@/lib/generated/graphql/graphql";
+import { Recipe } from "@/graphql";
 
 export default async function ProfilePage({
   searchParams,

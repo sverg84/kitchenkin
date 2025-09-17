@@ -1,4 +1,4 @@
-import { Category, Recipe } from "@/lib/generated/graphql/graphql";
+import { Category, Recipe } from "@/graphql";
 import { RecipeForm } from "./recipe-form";
 
 interface CreateProps {

@@ -54,7 +54,28 @@ builder.queryType({
       nullable: false,
       edgesNullable: false,
       nodeNullable: false,
-      resolve: (query) => prisma.recipe.findMany({ ...query }),
+      args: { search: t.arg.string({ required: false }) },
+      resolve: (query, _parent, args) => {
+        console.log("argyle", args);
+        return prisma.recipe.findMany({
+          ...query,
+          ...(args.search
+            ? {
+                where: {
+                  OR: [
+                    { title: { contains: args.search, mode: "insensitive" } },
+                    {
+                      description: {
+                        contains: args.search,
+                        mode: "insensitive",
+                      },
+                    },
+                  ],
+                },
+              }
+            : {}),
+        });
+      },
     }),
     categories: t.prismaConnection({
       type: "Category",
@@ -84,22 +105,6 @@ builder.queryType({
       args: { id: t.arg.id({ required: true }) },
       resolve: (query, _parent, args) =>
         prisma.recipe.findUnique({ ...query, where: { id: args.id } }),
-    }),
-    searchRecipes: t.prismaConnection({
-      type: "Recipe",
-      cursor: "id",
-      authScopes: { public: true },
-      args: { query: t.arg.string({ required: true }) },
-      resolve: (query, _parent, args) =>
-        prisma.recipe.findMany({
-          ...query,
-          where: {
-            OR: [
-              { title: { contains: args.query, mode: "insensitive" } },
-              { description: { contains: args.query, mode: "insensitive" } },
-            ],
-          },
-        }),
     }),
   }),
 });

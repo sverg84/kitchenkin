@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const RecipeFragment = gql`
-  fragment GqlRecipe_commonDetails on Recipe {
+  fragment Recipe_commonDetails on Recipe {
     rawId
     title
     description

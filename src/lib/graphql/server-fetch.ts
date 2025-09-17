@@ -1,24 +1,16 @@
-import {
+import type {
   QueryCategoriesConnection,
   QueryMyRecipesConnection,
   Recipe,
-} from "../generated/graphql/graphql";
+} from "@/graphql";
 import { getClient } from "./client/apollo-client-server-factory";
 import { gql } from "@apollo/client";
 
 // Query definitions
-export const GET_RECIPES = gql`
-  query GetRecipesServer {
-    recipes {
-      __typename
-    }
-  }
-`;
-
 export const GET_RECIPE = gql`
   query GetRecipe($id: ID!) {
     recipe(id: $id) {
-      ...GqlRecipe_commonDetails
+      ...Recipe_commonDetails
       allergens
       author {
         rawId
@@ -41,7 +33,7 @@ export const GET_MY_RECIPES = gql`
     myRecipes {
       edges {
         node {
-          ...GqlRecipe_commonDetails
+          ...Recipe_commonDetails
         }
       }
     }

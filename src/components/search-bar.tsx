@@ -3,23 +3,32 @@
 import type React from "react";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useSearchRecipes } from "@/lib/graphql/hooks/use-search-recipes";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 
 interface SearchBarProps {
   className?: string;
 }
 
 export function SearchBar({ className }: SearchBarProps) {
-  const [query, setQuery] = useState("");
-  const { search, results, loading } = useSearchRecipes();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [query, setQuery] = useState(searchParams.get("search") ?? "");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    search(query);
+    const updatedParams = new URLSearchParams(searchParams.toString());
+    if (query) {
+      updatedParams.set("search", query);
+    } else {
+      updatedParams.delete("search");
+    }
+    router.push(`/?${updatedParams.toString()}`);
   };
 
   return (
@@ -30,30 +39,23 @@ export function SearchBar({ className }: SearchBarProps) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="pr-12"
-        disabled={loading}
       />
-      <Button
-        aria-label="Search"
-        type="submit"
-        size="icon"
-        variant="ghost"
-        className="absolute right-0 top-0 h-full"
-        disabled={loading}
-      >
-        <Search className="size-4" />
-      </Button>
-      {results && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-background border rounded-md shadow-lg">
-          {results.map((recipe) => (
-            <div key={recipe.id} className="p-2 hover:bg-muted">
-              <h3 className="font-medium">{recipe.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {recipe.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="absolute right-0 top-0 h-full flex gap-x-4">
+        {query && (
+          <Button
+            aria-label="Clear"
+            size="icon"
+            variant="ghost"
+            type="button"
+            onClick={() => setQuery("")}
+          >
+            <X className="size-4" />
+          </Button>
+        )}
+        <Button aria-label="Search" type="submit" size="icon" variant="ghost">
+          <Search className="size-4" />
+        </Button>
+      </div>
     </form>
   );
 }

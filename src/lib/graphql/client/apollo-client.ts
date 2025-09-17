@@ -3,6 +3,7 @@ import { RecipeFragment } from "../fragments/recipe";
 
 import { ApolloClient, InMemoryCache } from "@apollo/client-integration-nextjs";
 import { HttpLink } from "@apollo/client";
+import { relayStylePagination } from "@apollo/client/utilities";
 
 export function makeClient(cookie?: string | null) {
   const link = new HttpLink({
@@ -16,6 +17,11 @@ export function makeClient(cookie?: string | null) {
   return new ApolloClient({
     cache: new InMemoryCache({
       fragments: createFragmentRegistry(RecipeFragment),
+      typePolicies: {
+        recipes: relayStylePagination(),
+        myRecipes: relayStylePagination(),
+        categories: relayStylePagination(),
+      },
     }),
     link,
   });

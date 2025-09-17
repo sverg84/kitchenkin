@@ -2,39 +2,19 @@ import Link from "next/link";
 import { RecipeCard } from "@/components/recipe/recipe-card";
 import { SearchBar } from "@/components/search-bar";
 import { getClient } from "@/lib/graphql/client/apollo-client-server-factory";
-import { gql } from "@apollo/client";
-import { type QueryRecipesConnection } from "@/lib/generated/graphql/graphql";
+import type { QueryRecipesConnection } from "@/graphql";
+import { RECIPES_QUERY } from "@/lib/graphql/queries/get-recipes";
 
-const query = gql`
-  query GetRecipesLocal {
-    recipes {
-      edges {
-        node {
-          rawId
-          title
-          description
-          prepTime
-          cookTime
-          category {
-            name
-          }
-          image {
-            small
-            medium
-            large
-            optimized
-          }
-        }
-      }
-    }
-  }
-`;
+const PAGE_SIZE = 24;
 
-async function getRecipes() {
+async function getRecipes(search?: string) {
   const client = await getClient();
 
+  // await new Promise((resolve) => setTimeout(resolve, 5000));
+
   const result = await client.query<{ recipes: QueryRecipesConnection }>({
-    query,
+    query: RECIPES_QUERY,
+    variables: { first: PAGE_SIZE, search },
   });
 
   if (result.error) {
@@ -44,8 +24,13 @@ async function getRecipes() {
   return result.data!.recipes.edges.map((edge) => edge.node);
 }
 
-export default async function Home() {
-  const recipes = await getRecipes();
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string }>;
+}) {
+  const { search } = await searchParams;
+  const recipes = await getRecipes(search);
 
   return (
     <main className="mx-auto px-4 py-8 max-w-7xl">

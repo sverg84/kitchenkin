@@ -29,7 +29,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { startTransition, useRef, useActionState, useState } from "react";
 import { createRecipe, updateRecipe } from "@/lib/prisma/server-actions";
 import { Spinner } from "@/components/ui/spinner";
-import type { Category, Recipe } from "@/lib/generated/graphql/graphql";
+import type { Category, Recipe } from "@/graphql";
 
 const unitItems = {
   capacity: [
@@ -141,10 +141,8 @@ export function RecipeForm({
 
   function getDirtyValues(): Partial<RecipeFormData> {
     const dirtyFields = form.formState.dirtyFields;
-    console.log("dirtyFields", dirtyFields);
 
     const formValues = getValues();
-    console.log("values", formValues);
 
     const dirtyValues: Record<string, unknown> = {};
 
@@ -190,7 +188,6 @@ export function RecipeForm({
       }
     }
 
-    console.log("dirtyValues", dirtyValues);
     return dirtyValues;
   }
 

@@ -16,7 +16,7 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { UserProfileTabType } from "@/lib/auth/types";
 import { useRouter } from "nextjs-toploader/app";
-import type { Recipe } from "@/lib/generated/graphql/graphql";
+import type { Recipe } from "@/graphql";
 
 interface UserProfileProps {
   activeTab: UserProfileTabType;
