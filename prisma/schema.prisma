@@ -44,12 +44,8 @@ model Recipe {
 }
 
 model Image {
-  id        String @id @default(uuid())
-  original  String
-  optimized String
-  small     String
-  medium    String
-  large     String
+  id        String @id
+  src       String
   recipeId  String @unique
   recipe    Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 }

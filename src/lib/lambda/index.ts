@@ -39,6 +39,7 @@ export async function imageCreateHandler({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "x-env": process.env.NODE_ENV ?? "development",
     },
     body: JSON.stringify({
       fileName,
@@ -68,6 +69,7 @@ export async function deleteImageInS3(id: string) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "x-env": process.env.NODE_ENV ?? "development",
     },
     body: JSON.stringify({ id }),
   });

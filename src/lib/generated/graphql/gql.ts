@@ -14,14 +14,14 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-    "\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      optimized\n      small\n      medium\n      large\n    }\n  }\n": typeof types.Recipe_CommonDetailsFragmentDoc,
+    "\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      src\n    }\n  }\n": typeof types.Recipe_CommonDetailsFragmentDoc,
     "\n  query GetRecipes($first: Int!, $search: String) {\n    recipes(first: $first, search: $search) {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n      pageInfo {\n        hasNextPage\n      }\n    }\n  }\n": typeof types.GetRecipesDocument,
     "\n  query GetRecipe($id: ID!) {\n    recipe(id: $id) {\n      ...Recipe_commonDetails\n      allergens\n      author {\n        rawId\n        name\n      }\n      servings\n      ingredients {\n        id\n        name\n        amount\n        unit\n      }\n      instructions\n    }\n  }\n": typeof types.GetRecipeDocument,
     "\n  query GetMyRecipes {\n    myRecipes {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n    }\n  }\n": typeof types.GetMyRecipesDocument,
     "\n  query GetCategories {\n    categories {\n      edges {\n        node {\n          rawId\n          name\n        }\n      }\n    }\n  }\n": typeof types.GetCategoriesDocument,
 };
 const documents: Documents = {
-    "\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      optimized\n      small\n      medium\n      large\n    }\n  }\n": types.Recipe_CommonDetailsFragmentDoc,
+    "\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      src\n    }\n  }\n": types.Recipe_CommonDetailsFragmentDoc,
     "\n  query GetRecipes($first: Int!, $search: String) {\n    recipes(first: $first, search: $search) {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n      pageInfo {\n        hasNextPage\n      }\n    }\n  }\n": types.GetRecipesDocument,
     "\n  query GetRecipe($id: ID!) {\n    recipe(id: $id) {\n      ...Recipe_commonDetails\n      allergens\n      author {\n        rawId\n        name\n      }\n      servings\n      ingredients {\n        id\n        name\n        amount\n        unit\n      }\n      instructions\n    }\n  }\n": types.GetRecipeDocument,
     "\n  query GetMyRecipes {\n    myRecipes {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n    }\n  }\n": types.GetMyRecipesDocument,
@@ -45,7 +45,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      optimized\n      small\n      medium\n      large\n    }\n  }\n"): (typeof documents)["\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      optimized\n      small\n      medium\n      large\n    }\n  }\n"];
+export function graphql(source: "\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      src\n    }\n  }\n"): (typeof documents)["\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      src\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

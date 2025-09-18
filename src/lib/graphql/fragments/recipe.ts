@@ -12,10 +12,7 @@ export const RecipeFragment = gql`
       name
     }
     image {
-      optimized
-      small
-      medium
-      large
+      src
     }
   }
 `;
