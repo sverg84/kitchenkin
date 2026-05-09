@@ -14,17 +14,23 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+    "\n  fragment RecipeConnection_connection on IRecipeConnection {\n    edges {\n      node {\n        ...Recipe_commonDetails\n      }\n    }\n  }\n": typeof types.RecipeConnection_ConnectionFragmentDoc,
+    "\n  fragment RecipeConnection_pagination on IRecipeConnection {\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n": typeof types.RecipeConnection_PaginationFragmentDoc,
     "\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      src\n    }\n  }\n": typeof types.Recipe_CommonDetailsFragmentDoc,
-    "\n  query GetRecipes($first: Int!, $search: String) {\n    recipes(first: $first, search: $search) {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n      pageInfo {\n        hasNextPage\n      }\n    }\n  }\n": typeof types.GetRecipesDocument,
+    "\n  query FavoriteRecipes($first: Int!, $after: String) {\n    recipes: favoriteRecipes(first: $first, after: $after) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists\n    }\n  }\n": typeof types.FavoriteRecipesDocument,
+    "\n  query GetRecipes($first: Int!, $after: String, $search: String) {\n    recipes(first: $first, after: $after, search: $search) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists(search: $search)\n    }\n  }\n": typeof types.GetRecipesDocument,
+    "\n  query RecipesForUserQuery($first: Int!, $after: String) {\n    recipes: myRecipes(first: $first, after: $after) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists\n    }\n  }\n": typeof types.RecipesForUserQueryDocument,
     "\n  query GetRecipe($id: ID!) {\n    recipe(id: $id) {\n      ...Recipe_commonDetails\n      allergens\n      author {\n        rawId\n        name\n      }\n      servings\n      ingredients {\n        id\n        name\n        amount\n        unit\n      }\n      instructions\n    }\n  }\n": typeof types.GetRecipeDocument,
-    "\n  query GetMyRecipes {\n    myRecipes {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n    }\n  }\n": typeof types.GetMyRecipesDocument,
     "\n  query GetCategories {\n    categories {\n      edges {\n        node {\n          rawId\n          name\n        }\n      }\n    }\n  }\n": typeof types.GetCategoriesDocument,
 };
 const documents: Documents = {
+    "\n  fragment RecipeConnection_connection on IRecipeConnection {\n    edges {\n      node {\n        ...Recipe_commonDetails\n      }\n    }\n  }\n": types.RecipeConnection_ConnectionFragmentDoc,
+    "\n  fragment RecipeConnection_pagination on IRecipeConnection {\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n": types.RecipeConnection_PaginationFragmentDoc,
     "\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      src\n    }\n  }\n": types.Recipe_CommonDetailsFragmentDoc,
-    "\n  query GetRecipes($first: Int!, $search: String) {\n    recipes(first: $first, search: $search) {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n      pageInfo {\n        hasNextPage\n      }\n    }\n  }\n": types.GetRecipesDocument,
+    "\n  query FavoriteRecipes($first: Int!, $after: String) {\n    recipes: favoriteRecipes(first: $first, after: $after) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists\n    }\n  }\n": types.FavoriteRecipesDocument,
+    "\n  query GetRecipes($first: Int!, $after: String, $search: String) {\n    recipes(first: $first, after: $after, search: $search) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists(search: $search)\n    }\n  }\n": types.GetRecipesDocument,
+    "\n  query RecipesForUserQuery($first: Int!, $after: String) {\n    recipes: myRecipes(first: $first, after: $after) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists\n    }\n  }\n": types.RecipesForUserQueryDocument,
     "\n  query GetRecipe($id: ID!) {\n    recipe(id: $id) {\n      ...Recipe_commonDetails\n      allergens\n      author {\n        rawId\n        name\n      }\n      servings\n      ingredients {\n        id\n        name\n        amount\n        unit\n      }\n      instructions\n    }\n  }\n": types.GetRecipeDocument,
-    "\n  query GetMyRecipes {\n    myRecipes {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n    }\n  }\n": types.GetMyRecipesDocument,
     "\n  query GetCategories {\n    categories {\n      edges {\n        node {\n          rawId\n          name\n        }\n      }\n    }\n  }\n": types.GetCategoriesDocument,
 };
 
@@ -45,19 +51,31 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  fragment RecipeConnection_connection on IRecipeConnection {\n    edges {\n      node {\n        ...Recipe_commonDetails\n      }\n    }\n  }\n"): (typeof documents)["\n  fragment RecipeConnection_connection on IRecipeConnection {\n    edges {\n      node {\n        ...Recipe_commonDetails\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment RecipeConnection_pagination on IRecipeConnection {\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n"): (typeof documents)["\n  fragment RecipeConnection_pagination on IRecipeConnection {\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      src\n    }\n  }\n"): (typeof documents)["\n  fragment Recipe_commonDetails on Recipe {\n    rawId\n    title\n    description\n    prepTime\n    cookTime\n    category {\n      rawId\n      name\n    }\n    image {\n      src\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query GetRecipes($first: Int!, $search: String) {\n    recipes(first: $first, search: $search) {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n      pageInfo {\n        hasNextPage\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetRecipes($first: Int!, $search: String) {\n    recipes(first: $first, search: $search) {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n      pageInfo {\n        hasNextPage\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query FavoriteRecipes($first: Int!, $after: String) {\n    recipes: favoriteRecipes(first: $first, after: $after) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists\n    }\n  }\n"): (typeof documents)["\n  query FavoriteRecipes($first: Int!, $after: String) {\n    recipes: favoriteRecipes(first: $first, after: $after) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetRecipes($first: Int!, $after: String, $search: String) {\n    recipes(first: $first, after: $after, search: $search) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists(search: $search)\n    }\n  }\n"): (typeof documents)["\n  query GetRecipes($first: Int!, $after: String, $search: String) {\n    recipes(first: $first, after: $after, search: $search) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists(search: $search)\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query RecipesForUserQuery($first: Int!, $after: String) {\n    recipes: myRecipes(first: $first, after: $after) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists\n    }\n  }\n"): (typeof documents)["\n  query RecipesForUserQuery($first: Int!, $after: String) {\n    recipes: myRecipes(first: $first, after: $after) {\n      id\n      ...RecipeConnection_connection\n      ...RecipeConnection_pagination\n      exists\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetRecipe($id: ID!) {\n    recipe(id: $id) {\n      ...Recipe_commonDetails\n      allergens\n      author {\n        rawId\n        name\n      }\n      servings\n      ingredients {\n        id\n        name\n        amount\n        unit\n      }\n      instructions\n    }\n  }\n"): (typeof documents)["\n  query GetRecipe($id: ID!) {\n    recipe(id: $id) {\n      ...Recipe_commonDetails\n      allergens\n      author {\n        rawId\n        name\n      }\n      servings\n      ingredients {\n        id\n        name\n        amount\n        unit\n      }\n      instructions\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetMyRecipes {\n    myRecipes {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetMyRecipes {\n    myRecipes {\n      edges {\n        node {\n          ...Recipe_commonDetails\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

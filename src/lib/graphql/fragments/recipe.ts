@@ -1,6 +1,6 @@
-import { gql } from "@apollo/client";
+import { graphql } from "@/lib/generated/graphql";
 
-export const RecipeFragment = gql`
+export const RecipeFragment = graphql(/* GraphQL */ `
   fragment Recipe_commonDetails on Recipe {
     rawId
     title
@@ -15,4 +15,4 @@ export const RecipeFragment = gql`
       src
     }
   }
-`;
+`);

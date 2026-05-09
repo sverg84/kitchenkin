@@ -7,6 +7,11 @@ import ScopeAuthPlugin from "@pothos/plugin-scope-auth";
 import RelayPlugin from "@pothos/plugin-relay";
 import { DateTimeISOResolver } from "graphql-scalars";
 import { Allergen } from "@prisma/client";
+import type {
+  PageInfo,
+  QueryRecipesConnection,
+  QueryRecipesConnectionEdge,
+} from "@/graphql";
 
 const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes;
@@ -16,11 +21,16 @@ const builder = new SchemaBuilder<{
       Output: Date;
     };
   };
+  Interfaces: {
+    IRecipeConnection: QueryRecipesConnection;
+    IRecipeConnectionEdge: QueryRecipesConnectionEdge;
+  };
   AuthScopes: {
     public: boolean;
     withAuthor: boolean;
   };
   Context: GraphQLContext;
+  PageInfo: PageInfo;
 }>({
   plugins: [RelayPlugin, ScopeAuthPlugin, PrismaPlugin],
   relay: {},

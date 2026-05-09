@@ -6,7 +6,7 @@ import { ApolloNextAppProvider } from "@apollo/client-integration-nextjs";
 
 export function ApolloProvider({ children }: { children: React.ReactNode }) {
   return (
-    <ApolloNextAppProvider makeClient={() => makeClient()}>
+    <ApolloNextAppProvider makeClient={makeClient}>
       {children}
     </ApolloNextAppProvider>
   );

@@ -1,4 +1,4 @@
-schema: "http://localhost:3000/api/graphql"
+schema: ".tmp/schema.graphql"
 documents: "./src/**/*.ts"
 generates:
   src/lib/generated/graphql/possibleTypes.json:

@@ -1,13 +1,8 @@
-import type {
-  QueryCategoriesConnection,
-  QueryMyRecipesConnection,
-  Recipe,
-} from "@/graphql";
 import { getClient } from "./client/apollo-client-server-factory";
-import { gql } from "@apollo/client";
+import { graphql } from "@/lib/generated/graphql";
 
 // Query definitions
-export const GET_RECIPE = gql`
+export const GET_RECIPE = graphql(/* GraphQL */ `
   query GetRecipe($id: ID!) {
     recipe(id: $id) {
       ...Recipe_commonDetails
@@ -26,21 +21,9 @@ export const GET_RECIPE = gql`
       instructions
     }
   }
-`;
+`);
 
-export const GET_MY_RECIPES = gql`
-  query GetMyRecipes {
-    myRecipes {
-      edges {
-        node {
-          ...Recipe_commonDetails
-        }
-      }
-    }
-  }
-`;
-
-export const GET_CATEGORIES = gql`
+export const GET_CATEGORIES = graphql(/* GraphQL */ `
   query GetCategories {
     categories {
       edges {
@@ -51,14 +34,14 @@ export const GET_CATEGORIES = gql`
       }
     }
   }
-`;
+`);
 
 // Server-side fetch functions
 export async function getRecipe(id: string) {
   const client = await getClient();
 
   try {
-    const { data, error } = await client.query<{ recipe: Recipe }>({
+    const { data, error } = await client.query({
       query: GET_RECIPE,
       variables: { id },
     });
@@ -74,34 +57,11 @@ export async function getRecipe(id: string) {
   }
 }
 
-export async function getRecipesByUser() {
-  const client = await getClient();
-
-  try {
-    const { data, error } = await client.query<{
-      myRecipes: QueryMyRecipesConnection;
-    }>({
-      query: GET_MY_RECIPES,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    return data!.myRecipes.edges?.map((edge) => edge?.node);
-  } catch (error) {
-    console.error("Error fetching user recipes:", error);
-    return [];
-  }
-}
-
 export async function getCategories() {
   const client = await getClient();
 
   try {
-    const { data, error } = await client.query<{
-      categories: QueryCategoriesConnection;
-    }>({
+    const { data, error } = await client.query({
       query: GET_CATEGORIES,
     });
 
