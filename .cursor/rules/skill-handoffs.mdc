@@ -1,0 +1,40 @@
+---
+name: KitchenKin skill handoffs
+description: Ensure agents invoke the right KitchenKin skills based on the change surface area.
+---
+
+## Skill handoffs (KitchenKin)
+
+Use these KitchenKin repo skills **conditionally** based on what the user asks for and what files/surfaces are involved. Prefer invoking the most specific skill(s) rather than relying on generic inference.
+
+### GraphQL-first contract/design work
+
+Invoke `.cursor/skills/backend-graphql-feature-design/SKILL.md` when work includes any of:
+- Adding/changing GraphQL types, queries, or mutations
+- Designing new GraphQL API contracts (even if not implementing yet)
+- Deciding pagination/filter/sort shapes, connection conventions, or fragment structure
+
+### Backend implementation (resolvers + Prisma + Redis)
+
+Invoke `.cursor/skills/backend-impl-prisma-redis/SKILL.md` when work includes any of:
+- Implementing/modifying resolvers
+- Implementing/modifying Prisma queries, pagination, or transactional semantics
+- Adding/changing Redis caching keys, invalidation, or consistency behavior
+
+### Frontend implementation (Next.js UI + Tailwind + shadcn/radix + Apollo)
+
+Invoke `.cursor/skills/frontend-feature-implementation/SKILL.md` when work includes any of:
+- Adding/modifying `src/app/**` routes/pages or `src/components/**` UI
+- Wiring Apollo queries/mutations/fragments into UI components
+- Implementing loading/empty/error states, accessibility, or interaction patterns
+
+### Maintainability reviews and refactors
+
+Invoke `.cursor/skills/code-review-maintainability/SKILL.md` when the user requests a code review, maintainability feedback, or refactoring suggestions.
+
+If and only if the user explicitly approves refactor execution (or asks to do it), consider `.cursor/skills-cursor/refactor-simplify-code/SKILL.md` for the follow-through.
+
+## Guardrails
+
+- Don’t invoke unrelated skills “just in case”; keep it scoped to the surfaces actually in play.
+- If a request spans multiple surfaces (e.g., GraphQL contract + resolver + UI), invoke the relevant skill(s) in that order: **contract → backend implementation → frontend implementation**.
