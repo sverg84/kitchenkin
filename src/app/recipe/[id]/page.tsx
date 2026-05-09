@@ -8,6 +8,8 @@ import { notFound } from "next/navigation";
 import { RecipeImage } from "@/components/recipe/recipe-image";
 import { auth } from "@/auth";
 import { Allergen } from "@prisma/client";
+import { useFragment as getFragmentData } from "@/lib/generated/graphql";
+import { RecipeFragment } from "@/lib/graphql/fragments/recipe";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,7 @@ export default async function RecipePage({
   if (!recipe) {
     notFound();
   }
+  const recipeDetails = getFragmentData(RecipeFragment, recipe);
 
   return (
     <main className="mx-auto px-4 py-8 max-w-7xl">
@@ -41,11 +44,11 @@ export default async function RecipePage({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="flex flex-col gap-y-8">
           <div className="relative aspect-video rounded-lg overflow-hidden">
-            <RecipeImage recipe={recipe} priority={true} />
+            <RecipeImage recipe={recipeDetails} priority={true} />
           </div>
           {session?.user?.id === recipe.author?.rawId && (
             <div className="self-center flex gap-x-2">
-              <Link href={`/recipe/${recipe.rawId}/edit`}>
+              <Link href={`/recipe/${recipeDetails.rawId}/edit`}>
                 <Button variant="secondary">
                   <label>Edit</label>
                   <Edit />
@@ -63,7 +66,7 @@ export default async function RecipePage({
                   </DialogHeader>
                   This cannot be undone.
                   <DialogFooter>
-                    <RecipeDeleteDialogButtons recipeId={recipe.rawId} />
+                    <RecipeDeleteDialogButtons recipeId={recipeDetails.rawId} />
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -71,20 +74,20 @@ export default async function RecipePage({
           )}
         </div>
         <div>
-          <h1 className="text-3xl font-bold">{recipe.title}</h1>
+          <h1 className="text-3xl font-bold">{recipeDetails.title}</h1>
           <p className="mb-2">
             {recipe.author?.name ? `by ${recipe.author.name}` : ""}
           </p>
-          <p className="text-muted-foreground mb-4">{recipe.description}</p>
+          <p className="text-muted-foreground mb-4">{recipeDetails.description}</p>
           <div className="flex flex-wrap gap-2 mb-4 items-center">
-            <Badge>{recipe.category?.name}</Badge>
+            <Badge>{recipeDetails.category?.name}</Badge>
             <div className="flex items-center">
               <Clock className="size-4 mr-1" />
-              <span className="text-sm">Prep: {recipe.prepTime}</span>
+              <span className="text-sm">Prep: {recipeDetails.prepTime}</span>
             </div>
             <div className="flex items-center">
               <Clock className="size-4 mr-1" />
-              <span className="text-sm">Cook: {recipe.cookTime}</span>
+              <span className="text-sm">Cook: {recipeDetails.cookTime}</span>
             </div>
             <div className="text-sm">Servings: {recipe.servings}</div>
           </div>

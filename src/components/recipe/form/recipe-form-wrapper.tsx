@@ -1,5 +1,5 @@
-import { Category, Recipe } from "@/graphql";
 import { RecipeForm } from "./recipe-form";
+import type { GetRecipeQuery } from "@/lib/generated/graphql/graphql";
 
 interface CreateProps {
   formMode: "create";
@@ -8,14 +8,14 @@ interface CreateProps {
 
 interface EditProps {
   formMode: "update";
-  initialRecipe: Recipe;
+  initialRecipe: NonNullable<GetRecipeQuery["recipe"]>;
 }
 
 type Pls = CreateProps | EditProps;
 
 type Props = Readonly<
   {
-    categories: Category[];
+    categories: Array<{ rawId: string; name: string }>;
   } & Pls
 >;
 

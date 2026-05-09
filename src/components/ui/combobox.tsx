@@ -103,7 +103,7 @@ export function Combobox({
   if (isDesktop) {
     return (
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>{comboboxButton}</PopoverTrigger>
+        <PopoverTrigger asChild={true}>{comboboxButton}</PopoverTrigger>
         <PopoverContent
           className="p-0 w-(--radix-popover-trigger-width) max-h-(--radix-popover-content-available-height)"
           align="start"
@@ -116,7 +116,7 @@ export function Combobox({
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>{comboboxButton}</DrawerTrigger>
+      <DrawerTrigger asChild={true}>{comboboxButton}</DrawerTrigger>
       <DrawerContent>
         <DrawerTitle className="hidden">
           {buttonProps?.placeholder || "Select value"}

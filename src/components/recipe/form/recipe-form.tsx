@@ -29,7 +29,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { startTransition, useRef, useActionState, useState } from "react";
 import { createRecipe, updateRecipe } from "@/lib/prisma/server-actions";
 import { Spinner } from "@/components/ui/spinner";
-import type { Category, Recipe } from "@/graphql";
+import type { GetRecipeQuery } from "@/lib/generated/graphql/graphql";
+import { useFragment as getFragmentData } from "@/lib/generated/graphql";
+import { RecipeFragment } from "@/lib/graphql/fragments/recipe";
 
 const unitItems = {
   capacity: [
@@ -96,8 +98,8 @@ const recipeFormSchema = z.discriminatedUnion("type", [
 type RecipeFormData = z.infer<typeof recipeFormSchema>;
 
 interface RecipeFormProps {
-  categories: Category[];
-  initialRecipe: Recipe | undefined;
+  categories: Array<{ rawId: string; name: string }>;
+  initialRecipe: NonNullable<GetRecipeQuery["recipe"]> | undefined;
   type: "create" | "update";
 }
 
@@ -106,26 +108,28 @@ export function RecipeForm({
   initialRecipe,
   type,
 }: RecipeFormProps) {
+  const initialRecipeDetails = getFragmentData(RecipeFragment, initialRecipe);
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
 
-  const [message, action] = useActionState(
+  const [message, action, isSaving] = useActionState(
     type === "create" ? createRecipe : updateRecipe,
     null
   );
+  const loading = isUploadingImage || isSaving;
 
   const form = useForm({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
       type,
-      ...(type === "update" ? { id: initialRecipe?.rawId } : null),
+      ...(type === "update" ? { id: initialRecipeDetails?.rawId } : null),
       image: undefined,
-      categoryId: initialRecipe?.category?.rawId || undefined,
-      title: initialRecipe?.title || "",
-      description: initialRecipe?.description || "",
-      prepTime: initialRecipe?.prepTime || "",
-      cookTime: initialRecipe?.cookTime || "",
+      categoryId: initialRecipeDetails?.category?.rawId || undefined,
+      title: initialRecipeDetails?.title || "",
+      description: initialRecipeDetails?.description || "",
+      prepTime: initialRecipeDetails?.prepTime || "",
+      cookTime: initialRecipeDetails?.cookTime || "",
       servings: initialRecipe?.servings || 0,
       instructions: initialRecipe?.instructions || [""],
       ingredients: initialRecipe?.ingredients
@@ -247,7 +251,6 @@ export function RecipeForm({
   };
 
   const onSubmit = async () => {
-    setLoading(true);
     const { type: _type, ...restValues } = getDirtyValues();
 
     // Extend the type to allow imageData
@@ -257,43 +260,42 @@ export function RecipeForm({
     const values: ValuesWithImageData = { ...restValues };
 
     if (type === "update") {
-      values.id = initialRecipe!.rawId;
+      values.id = initialRecipeDetails!.rawId;
     }
 
     if (values.image) {
-      const { encoded, fileName, fileType } = values.image;
-      // Convert base64 to Blob for FormData
-      const byteString = atob(encoded);
-      const byteArray = new Uint8Array(byteString.length);
-      for (let i = 0; i < byteString.length; i++) {
-        byteArray[i] = byteString.charCodeAt(i);
+      setIsUploadingImage(true);
+      try {
+        const { encoded, fileName, fileType } = values.image;
+        // Convert base64 to Blob for FormData
+        const byteString = atob(encoded);
+        const byteArray = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) {
+          byteArray[i] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([byteArray], { type: fileType });
+        // Use append with 3rd arg for filename
+        const imageFormData = new FormData();
+        imageFormData.append("image", blob, fileName);
+
+        const resp = await fetch("/api/image-upload", {
+          method: "POST",
+          body: imageFormData,
+        });
+
+        if (!resp.ok) {
+          const error = await resp.text();
+          throw new Error(error);
+        }
+
+        const imageData = await resp.json();
+        values.image = imageData;
+      } finally {
+        setIsUploadingImage(false);
       }
-      const blob = new Blob([byteArray], { type: fileType });
-      // Use append with 3rd arg for filename
-      const imageFormData = new FormData();
-      imageFormData.append("image", blob, fileName);
-
-      const resp = await fetch("/api/image-upload", {
-        method: "POST",
-        body: imageFormData,
-      });
-
-      if (!resp.ok) {
-        const error = await resp.text();
-        setLoading(false);
-        throw new Error(error);
-      }
-
-      const imageData = await resp.json();
-      values.image = imageData;
     }
     startTransition(() => {
-      try {
-        action(values);
-      } catch (error) {
-        setLoading(false);
-        throw error;
-      }
+      action(values);
     });
   };
 

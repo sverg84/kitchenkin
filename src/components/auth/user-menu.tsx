@@ -27,10 +27,10 @@ export function UserMenu() {
   if (status === "unauthenticated") {
     return (
       <div className="flex gap-2">
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="ghost" size="sm" asChild={true}>
           <Link href="/login">Sign In</Link>
         </Button>
-        <Button size="sm" asChild>
+        <Button size="sm" asChild={true}>
           <Link href="/register">Sign Up</Link>
         </Button>
       </div>
@@ -47,7 +47,7 @@ export function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild={true}>
         <Button variant="ghost" className="relative size-10 rounded-full">
           <Avatar className="size-10">
             <AvatarImage
@@ -66,7 +66,7 @@ export function UserMenu() {
           </p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild={true}>
           <Link
             href="/profile"
             className="flex w-full cursor-pointer items-center"
@@ -75,7 +75,7 @@ export function UserMenu() {
             Profile
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild={true}>
           <Link
             href="/recipe/new"
             className="flex w-full cursor-pointer items-center"
