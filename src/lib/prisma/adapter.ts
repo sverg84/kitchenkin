@@ -1,13 +1,36 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
 import { prisma } from ".";
-import { redis } from "../redis";
+import { getRedis } from "../redis";
 
 const adapter = PrismaAdapter(prisma);
 
-// Set expiration time to 30 minutes
-const secondsToken = "EX";
-const seconds = 60 * 30;
+const maxCacheTtlSeconds = 60 * 30;
+
+function toValidDate(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === "string" || typeof value === "number") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  return null;
+}
+
+function getSessionCacheTtlSeconds(expires: unknown): number | null {
+  const expiresAt = toValidDate(expires);
+  if (!expiresAt) return maxCacheTtlSeconds;
+
+  const secondsUntilExpiry = Math.floor(
+    (expiresAt.getTime() - Date.now()) / 1000
+  );
+  if (secondsUntilExpiry <= 0) return null;
+
+  return Math.min(secondsUntilExpiry, maxCacheTtlSeconds);
+}
 
 function getRedisKey(sessionToken: string) {
   return `session:${sessionToken}`;
@@ -17,21 +40,25 @@ const CustomPrismaAdapter: Adapter = {
   ...adapter,
 
   async deleteSession(sessionToken) {
+    const redis = getRedis();
     await Promise.all([
-      redis.del(getRedisKey(sessionToken)),
+      redis?.del(getRedisKey(sessionToken)),
       adapter.deleteSession!(sessionToken),
     ]);
   },
 
   async updateSession(session) {
     const updatedSession = await adapter.updateSession!(session);
+    const redis = getRedis();
 
-    if (updatedSession) {
+    if (updatedSession && redis) {
+      const ttlSeconds = getSessionCacheTtlSeconds(updatedSession.expires);
+      if (!ttlSeconds) return updatedSession;
       await redis.set(
         getRedisKey(session.sessionToken),
         JSON.stringify(updatedSession),
-        secondsToken,
-        seconds
+        "EX",
+        ttlSeconds
       );
     }
     return updatedSession;
@@ -39,20 +66,25 @@ const CustomPrismaAdapter: Adapter = {
 
   async getSessionAndUser(sessionToken) {
     const redisKey = getRedisKey(sessionToken);
+    const redis = getRedis();
 
-    const cachedSession = await redis.get(redisKey);
-    if (cachedSession) {
-      return JSON.parse(cachedSession);
+    if (redis) {
+      const cachedSession = await redis.get(redisKey);
+      if (cachedSession) {
+        return JSON.parse(cachedSession);
+      }
     }
 
     const sessionAndUser = await adapter.getSessionAndUser!(sessionToken);
 
-    if (sessionAndUser) {
+    if (sessionAndUser && redis) {
+      const ttlSeconds = getSessionCacheTtlSeconds(sessionAndUser.session.expires);
+      if (!ttlSeconds) return sessionAndUser;
       await redis.set(
         redisKey,
         JSON.stringify(sessionAndUser),
-        secondsToken,
-        seconds
+        "EX",
+        ttlSeconds
       );
     }
 
