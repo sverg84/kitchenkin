@@ -40,6 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma
+/src/lib/generated/prisma/
+
 # local db handling only
 seed.mjs
 

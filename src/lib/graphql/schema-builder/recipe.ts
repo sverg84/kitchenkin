@@ -1,4 +1,4 @@
-import { Allergen, Prisma } from "@prisma/client";
+import { Allergen, Prisma } from "@/lib/generated/prisma/client";
 import { prismaSelectFromResolveInfo } from "@/lib/prisma/graphql-resolve";
 import { prisma } from "@/lib/prisma";
 import builder from "./builder";

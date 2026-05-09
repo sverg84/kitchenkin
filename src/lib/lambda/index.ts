@@ -1,4 +1,4 @@
-import type { Allergen } from "@prisma/client";
+import type { Allergen } from "@/lib/generated/prisma/client";
 import type { UpdateRecipeInput } from "../graphql/inputs/recipe-input";
 
 const fileTypes = [

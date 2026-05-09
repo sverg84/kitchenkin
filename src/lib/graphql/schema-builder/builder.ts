@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import type PrismaTypes from "@pothos/plugin-prisma/generated";
+import type PrismaTypes from "@/lib/generated/pothos-prisma";
+import { getDatamodel } from "@/lib/generated/pothos-prisma";
 import type { GraphQLContext } from "../context";
 import SchemaBuilder from "@pothos/core";
 import PrismaPlugin from "@pothos/plugin-prisma";
 import ScopeAuthPlugin from "@pothos/plugin-scope-auth";
 import RelayPlugin from "@pothos/plugin-relay";
 import { DateTimeISOResolver } from "graphql-scalars";
-import { Allergen } from "@prisma/client";
+import { Allergen } from "@/lib/generated/prisma/client";
 import type {
   PageInfo,
   QueryRecipesConnection,
@@ -42,6 +43,7 @@ const builder = new SchemaBuilder<{
   },
   prisma: {
     client: prisma,
+    dmmf: getDatamodel(),
     onUnusedQuery: "warn",
   },
 });

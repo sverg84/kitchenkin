@@ -7,7 +7,7 @@ import { getRecipe } from "@/lib/graphql/server-fetch";
 import { notFound } from "next/navigation";
 import { RecipeImage } from "@/components/recipe/recipe-image";
 import { auth } from "@/auth";
-import { Allergen } from "@prisma/client";
+import { Allergen } from "@/lib/generated/prisma/client";
 import { useFragment as getFragmentData } from "@/lib/generated/graphql";
 import { RecipeFragment } from "@/lib/graphql/fragments/recipe";
 import {
