@@ -41,6 +41,7 @@ model Recipe {
   imageId      String?      @unique
 
   @@index([authorId])
+  @@index([createdAt, id])
 }
 
 model Image {
