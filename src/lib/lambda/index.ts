@@ -79,19 +79,19 @@ export async function deleteImageInS3(id: string) {
  * Invoke a Lambda function to automatically detect allergens
  * in a recipe given its title and ingredients
  *
- * @param {Object} eekle The title and ingredients of a recipe form input
+ * @param {Object} input The title and ingredients of a recipe form input
  * @returns {Promise<Allergen[]>}
  * @async
  */
 export async function detectAllergens(
-  eekle: Pick<UpdateRecipeInput, "title" | "ingredients">
+  input: Pick<UpdateRecipeInput, "title" | "ingredients">,
 ): Promise<Allergen[]> {
   const response = await fetch(process.env.DETECT_ALLERGENS_ENDPOINT!, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(eekle),
+    body: JSON.stringify(input),
   });
 
   if (!response.ok) {
