@@ -41,10 +41,14 @@ const CustomPrismaAdapter: Adapter = {
 
   async deleteSession(sessionToken) {
     const redis = getRedis();
-    await Promise.all([
-      redis?.del(getRedisKey(sessionToken)),
-      adapter.deleteSession!(sessionToken),
-    ]);
+    if (redis) {
+      try {
+        await redis.del(getRedisKey(sessionToken));
+      } catch {
+        /* optional cache — ignore */
+      }
+    }
+    await adapter.deleteSession!(sessionToken);
   },
 
   async updateSession(session) {
@@ -54,12 +58,16 @@ const CustomPrismaAdapter: Adapter = {
     if (updatedSession && redis) {
       const ttlSeconds = getSessionCacheTtlSeconds(updatedSession.expires);
       if (!ttlSeconds) return updatedSession;
-      await redis.set(
-        getRedisKey(session.sessionToken),
-        JSON.stringify(updatedSession),
-        "EX",
-        ttlSeconds
-      );
+      try {
+        await redis.set(
+          getRedisKey(session.sessionToken),
+          JSON.stringify(updatedSession),
+          "EX",
+          ttlSeconds
+        );
+      } catch {
+        /* optional cache — ignore */
+      }
     }
     return updatedSession;
   },
@@ -69,9 +77,13 @@ const CustomPrismaAdapter: Adapter = {
     const redis = getRedis();
 
     if (redis) {
-      const cachedSession = await redis.get(redisKey);
-      if (cachedSession) {
-        return JSON.parse(cachedSession);
+      try {
+        const cachedSession = await redis.get(redisKey);
+        if (cachedSession) {
+          return JSON.parse(cachedSession);
+        }
+      } catch {
+        /* optional cache — continue to DB */
       }
     }
 
@@ -80,12 +92,16 @@ const CustomPrismaAdapter: Adapter = {
     if (sessionAndUser && redis) {
       const ttlSeconds = getSessionCacheTtlSeconds(sessionAndUser.session.expires);
       if (!ttlSeconds) return sessionAndUser;
-      await redis.set(
-        redisKey,
-        JSON.stringify(sessionAndUser),
-        "EX",
-        ttlSeconds
-      );
+      try {
+        await redis.set(
+          redisKey,
+          JSON.stringify(sessionAndUser),
+          "EX",
+          ttlSeconds
+        );
+      } catch {
+        /* optional cache — ignore */
+      }
     }
 
     return sessionAndUser;
