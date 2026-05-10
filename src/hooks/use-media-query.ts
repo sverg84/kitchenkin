@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
+
+function getMediaQuerySnapshot(query: string) {
+  return () => window.matchMedia(query).matches;
+}
+
+function subscribe(query: string, callback: () => void) {
+  const mq = window.matchMedia(query);
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
 
 export function useMediaQuery(query: string) {
-  const [value, setValue] = useState(false);
-
-  useEffect(() => {
-    function onChange(event: MediaQueryListEvent) {
-      setValue(event.matches);
-    }
-
-    const result = matchMedia(query);
-    result.addEventListener("change", onChange);
-    setValue(result.matches);
-
-    return () => result.removeEventListener("change", onChange);
-  }, [query]);
-
-  return value;
+  return useSyncExternalStore(
+    (cb) => subscribe(query, cb),
+    getMediaQuerySnapshot(query),
+    () => false,
+  );
 }
