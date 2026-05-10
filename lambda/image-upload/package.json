@@ -1,0 +1,20 @@
+{
+  "name": "@kitchenkin/lambda-image-upload",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "install:prod": "bun install --production",
+    "zip": "rm -rf dist && mkdir -p dist && zip -r dist/function.zip index.mjs package.json node_modules",
+    "bundle": "rm -rf dist && mkdir -p dist && bunx esbuild index.mjs --bundle --platform=node --target=node22 --format=esm --external:sharp --outfile=dist/index.mjs",
+    "zip:bundle": "bun run bundle && (cd dist && zip -r function-bundled.zip index.mjs)"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1045.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
+}

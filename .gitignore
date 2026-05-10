@@ -49,3 +49,7 @@ seed.mjs
 # local script artifacts
 .review/
 .tmp/
+
+# lambda package artifacts
+lambda/**/node_modules/
+lambda/**/dist/
