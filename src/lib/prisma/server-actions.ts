@@ -57,7 +57,7 @@ async function recipeAuthorInvariant(recipeId: string): Promise<void> {
 
 export async function createRecipe(
   _previousState: string | null,
-  data: unknown
+  data: unknown,
 ) {
   let recipe = null;
   try {
@@ -111,7 +111,7 @@ export async function createRecipe(
  */
 export async function updateRecipe(
   _previousState: string | null,
-  data: unknown
+  data: unknown,
 ) {
   let recipe = null;
 
