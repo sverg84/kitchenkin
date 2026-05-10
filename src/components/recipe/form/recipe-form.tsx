@@ -77,7 +77,7 @@ const createSchema = z.strictObject({
         .trim()
         .regex(
           /^\d+(?: \d+\/\d+)?$|^\d+\/\d+$|^\d*(?:\.\d{1,2})?$/,
-          "Amount must be a whole number, a fraction, a mixed number, or a decimal with up to 2 decimal points (e.g., '2' or '1/2')"
+          "Amount must be a whole number, a fraction, a mixed number, or a decimal with up to 2 decimal points (e.g., '2' or '1/2')",
         )
         .nonempty(),
       unit: z.string().trim().nonempty("Please select a unit"),
@@ -115,7 +115,7 @@ export function RecipeForm({
 
   const [message, action, isSaving] = useActionState(
     type === "create" ? createRecipe : updateRecipe,
-    null
+    null,
   );
   const loading = isUploadingImage || isSaving;
 
@@ -125,7 +125,7 @@ export function RecipeForm({
       type,
       ...(type === "update" ? { id: initialRecipeDetails?.rawId } : null),
       image: undefined,
-      categoryId: initialRecipeDetails?.category?.rawId || undefined,
+      categoryId: initialRecipeDetails?.category?.rawId ?? "",
       title: initialRecipeDetails?.title || "",
       description: initialRecipeDetails?.description || "",
       prepTime: initialRecipeDetails?.prepTime || "",
@@ -168,7 +168,7 @@ export function RecipeForm({
         case "instructions": {
           if (
             (val as boolean[]).some(
-              (isInstructionDirty) => isInstructionDirty === true
+              (isInstructionDirty) => isInstructionDirty === true,
             )
           ) {
             dirtyValues[key] = formValues.instructions;
@@ -178,7 +178,7 @@ export function RecipeForm({
         case "ingredients": {
           if (
             (val as Record<string, boolean>[]).some((obj) =>
-              Object.values(obj).some((isFieldDirty) => isFieldDirty)
+              Object.values(obj).some((isFieldDirty) => isFieldDirty),
             )
           ) {
             dirtyValues[key] = formValues.ingredients;
@@ -243,7 +243,7 @@ export function RecipeForm({
           fileType: imageFile.type,
           encoded: imageEncoded,
         },
-        { shouldDirty: true }
+        { shouldDirty: true },
       );
     };
 
@@ -325,7 +325,7 @@ export function RecipeForm({
                     Choose File
                   </Button>
                   <span className="self-center">
-                    {form.watch("image.fileName") || "No image selected"}
+                    {watch("image.fileName") || "No image selected"}
                   </span>
                 </div>
               </div>
@@ -421,7 +421,7 @@ export function RecipeForm({
                     <FormControl>
                       <Select
                         disabled={loading}
-                        value={field.value}
+                        value={field.value ?? ""}
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger aria-invalid={!!error}>
@@ -497,7 +497,6 @@ export function RecipeForm({
                             items={{ itemsGrouped: unitItems }}
                             value={field.value}
                             onChange={(v) => {
-                              watch(`ingredients.${index}.unit`);
                               field.onChange(v);
                             }}
                           />
@@ -616,8 +615,8 @@ export function RecipeForm({
                     ? "Creating..."
                     : "Updating..."
                   : type === "create"
-                  ? "Create Recipe"
-                  : "Update Recipe"}
+                    ? "Create Recipe"
+                    : "Update Recipe"}
                 {loading && <Spinner size="sm" />}
               </Button>
             </div>
