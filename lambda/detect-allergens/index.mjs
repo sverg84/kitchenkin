@@ -107,7 +107,7 @@ ${ingredientLines.length ? ingredientLines.join("\n") : "(none)"}`;
   let data;
   try {
     const command = new InvokeModelCommand({
-      modelId: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      modelId: "global.anthropic.claude-haiku-4-5-20251001-v1:0",
       body: JSON.stringify({
         max_tokens: 256,
         temperature: 0,

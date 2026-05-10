@@ -7,6 +7,7 @@
   },
   "scripts": {
     "install:prod": "bun install --production",
+    "zip:index": "rm -rf dist && mkdir -p dist && zip -j dist/function-index.zip index.mjs",
     "zip": "rm -rf dist && mkdir -p dist && zip -r dist/function.zip index.mjs package.json node_modules",
     "bundle": "rm -rf dist && mkdir -p dist && bunx esbuild index.mjs --bundle --platform=node --target=node22 --format=esm --outfile=dist/index.mjs",
     "zip:bundle": "bun run bundle && (cd dist && zip -r function-bundled.zip index.mjs)"

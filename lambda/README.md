@@ -18,21 +18,21 @@ For each environment (local, staging, production), point those env vars to the c
 ## Runtime and Packaging
 
 - Target Node runtime: `22.x` (see each package's `engines` field).
-- Each package has:
-  - `bun run install:prod` to install runtime dependencies.
-  - `bun run zip` to create `dist/function.zip`.
-  - `bun run bundle` and `bun run zip:bundle` for a bundled artifact option.
+- **`bun run zip:index`** (recommended for these functions): writes **`dist/function-index.zip`** containing **only** `index.mjs` at the archive root (handler stays **`index.handler`**). Use this when relying on the **Lambda Node.js 22 runtime–included AWS SDK for JavaScript v3** and any layers (**`S3ImageProcessDeps`** for **`sharp`** on image-upload). No `install:prod` needed to produce the artifact.
+- **`bun run zip`**: full deployment package with `node_modules` (after **`bun run install:prod`**).
+- **`bun run bundle`** / **`bun run zip:bundle`**: single-file esbuild output + zip (self-contained SDK in the bundle unless externals apply).
+
+See [Runtime-included SDK versions (Node.js)](https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html#nodejs-sdk-included) for the pinned SDK v3 minor on Lambda.
 
 ## Manual Deployment (Current Scope)
 
 ### 1) Build a package
 
-Example for allergen detection:
+Example for allergen detection (index-only zip):
 
 ```bash
 cd "/Users/stephenvergara/Documents/GitHub/kitchenkin/lambda/detect-allergens"
-bun run install:prod
-bun run zip
+bun run zip:index
 ```
 
 ### 2) Upload to AWS Lambda
@@ -43,7 +43,7 @@ bun run zip
 ```bash
 aws lambda update-function-code \
   --function-name kitchenkin-detect-allergens \
-  --zip-file fileb://dist/function.zip
+  --zip-file fileb://dist/function-index.zip
 ```
 
 Repeat for `image-upload` and `image-delete` with their function names and zip files.
