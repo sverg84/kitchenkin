@@ -5,8 +5,22 @@ import { UserProfile } from "@/components/profile/user-profile";
 import { PreloadQuery } from "@/lib/graphql/client/apollo-client-server-factory";
 import { RECIPES_FOR_USER_QUERY } from "@/lib/graphql/queries/my-recipes";
 import { FAVORITE_RECIPES_QUERY } from "@/lib/graphql/queries/favorite-recipes";
+import { Suspense } from "react";
+import { ProfileFallback } from "@/components/suspense-fallbacks/profile-fallback";
 
-export default async function ProfilePage({
+export default function ProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  return (
+    <Suspense fallback={<ProfileFallback />}>
+      <ProfilePageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function ProfilePageContent({
   searchParams,
 }: {
   searchParams: Promise<{ tab?: string }>;

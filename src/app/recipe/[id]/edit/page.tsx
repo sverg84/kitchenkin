@@ -1,9 +1,23 @@
 import { auth } from "@/auth";
 import { RecipeFormWrapper } from "@/components/recipe/form/recipe-form-wrapper";
 import { getCategories, getRecipe } from "@/lib/graphql/server-fetch";
-import { notFound, redirect, unauthorized } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react";
+import { RecipeFormFallback } from "@/components/suspense-fallbacks/recipe-form-fallback";
 
-export default async function EditRecipePage({
+export default function EditRecipePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense fallback={<RecipeFormFallback heading="Edit Recipe" />}>
+      <EditRecipePageContent params={params} />
+    </Suspense>
+  );
+}
+
+async function EditRecipePageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -26,7 +40,7 @@ export default async function EditRecipePage({
   }
 
   if (recipe.author?.rawId !== session.user.id) {
-    unauthorized();
+    redirect(`/recipe/${id}`);
   }
 
   return (

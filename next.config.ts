@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  cacheComponents: true,
   images: {
     remotePatterns: [
       new URL("https://placeholder.pics/svg/640x480/DEDEDE/555555-f4f5e4/**"),

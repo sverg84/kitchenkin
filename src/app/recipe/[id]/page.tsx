@@ -19,8 +19,22 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { RecipeDeleteDialogButtons } from "@/components/recipe/delete-dialog-buttons";
+import { Suspense } from "react";
+import { RecipeDetailFallback } from "@/components/suspense-fallbacks/recipe-detail-fallback";
 
-export default async function RecipePage({
+export default function RecipePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense fallback={<RecipeDetailFallback />}>
+      <RecipePageContent params={params} />
+    </Suspense>
+  );
+}
+
+async function RecipePageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -78,7 +92,9 @@ export default async function RecipePage({
           <p className="mb-2">
             {recipe.author?.name ? `by ${recipe.author.name}` : ""}
           </p>
-          <p className="text-muted-foreground mb-4">{recipeDetails.description}</p>
+          <p className="text-muted-foreground mb-4">
+            {recipeDetails.description}
+          </p>
           <div className="flex flex-wrap gap-2 mb-4 items-center">
             <Badge>{recipeDetails.category?.name}</Badge>
             <div className="flex items-center">
