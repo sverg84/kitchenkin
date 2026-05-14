@@ -1,6 +1,6 @@
-import { Allergen, Prisma } from "@/lib/generated/prisma/client";
-import { prismaSelectFromResolveInfo } from "@/lib/prisma/graphql-resolve";
-import { prisma } from "@/lib/prisma";
+import { Allergen, Prisma } from "@kk/db";
+import { prismaSelectFromResolveInfo } from "../graphql-resolve";
+import { prisma } from "@kk/db";
 import builder from "./builder";
 
 type RecipeCursorPayload = {
@@ -118,7 +118,11 @@ builder.queryFields((t) => ({
                     { createdAt: { lt: new Date(afterCursor.createdAt) } },
                     {
                       AND: [
-                        { createdAt: { equals: new Date(afterCursor.createdAt) } },
+                        {
+                          createdAt: {
+                            equals: new Date(afterCursor.createdAt),
+                          },
+                        },
                         { id: { lt: afterCursor.id } },
                       ],
                     },
@@ -144,13 +148,13 @@ builder.queryFields((t) => ({
               id: slicedRecipes[0].id,
             })
           : null;
-        const endCursor: string | null =
-          slicedRecipes[slicedRecipes.length - 1]
-            ? encodeRecipeCursor({
-                createdAt: slicedRecipes[slicedRecipes.length - 1].createdAt.toISOString(),
-                id: slicedRecipes[slicedRecipes.length - 1].id,
-              })
-            : null;
+        const endCursor: string | null = slicedRecipes[slicedRecipes.length - 1]
+          ? encodeRecipeCursor({
+              createdAt:
+                slicedRecipes[slicedRecipes.length - 1].createdAt.toISOString(),
+              id: slicedRecipes[slicedRecipes.length - 1].id,
+            })
+          : null;
 
         return {
           __typename: "QueryRecipesConnection",

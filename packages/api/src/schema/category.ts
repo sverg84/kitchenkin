@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@kk/db";
 import builder from "./builder";
 
 builder.prismaNode("Category", {
@@ -21,5 +21,5 @@ builder.queryField("categories", (t) =>
     edgesNullable: false,
     nodeNullable: false,
     resolve: (query) => prisma.category.findMany({ ...query }),
-  })
+  }),
 );

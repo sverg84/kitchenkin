@@ -1,0 +1,26 @@
+{
+  "name": "@kk/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pothos-prisma": "./src/generated/pothos-prisma.ts"
+  },
+  "dependencies": {
+    "@kk/db": "workspace:*",
+    "@pothos/core": "^4.9.0",
+    "@pothos/plugin-prisma": "^4.14.3",
+    "@pothos/plugin-relay": "^4.6.2",
+    "@pothos/plugin-scope-auth": "^4.1.5",
+    "@pothos/plugin-zod": "^4.2.2",
+    "graphql": "^16.11.0",
+    "graphql-parse-resolve-info": "^4.14.1",
+    "graphql-scalars": "^1.24.2"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
