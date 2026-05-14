@@ -4,11 +4,11 @@ This directory contains repo-owned AWS Lambda handlers for KitchenKin.
 
 ## Functions and Endpoint Mapping
 
-| Function | Package Folder | Handler | App Env Var |
-| --- | --- | --- | --- |
+| Function           | Package Folder             | Handler         | App Env Var                 |
+| ------------------ | -------------------------- | --------------- | --------------------------- |
 | Allergen detection | `lambda/detect-allergens/` | `index.handler` | `DETECT_ALLERGENS_ENDPOINT` |
-| Image upload | `lambda/image-upload/` | `index.handler` | `IMAGE_UPLOAD_ENDPOINT` |
-| Image delete | `lambda/image-delete/` | `index.handler` | `IMAGE_DELETE_ENDPOINT` |
+| Image upload       | `lambda/image-upload/`     | `index.handler` | `IMAGE_UPLOAD_ENDPOINT`     |
+| Image delete       | `lambda/image-delete/`     | `index.handler` | `IMAGE_DELETE_ENDPOINT`     |
 
 All three endpoint env vars are read by `src/lib/lambda/index.ts`.
 For each environment (local, staging, production), point those env vars to the corresponding Lambda Function URL (or API Gateway URL).

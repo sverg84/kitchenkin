@@ -2,84 +2,31 @@
   "name": "kitchenkin",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "bunx prisma generate && next build",
-    "start": "next start",
-    "lint": "eslint .",
-    "vercel-build": "bunx prisma generate && bunx prisma migrate deploy && next build",
-    "clean": "rm -rf node_modules .next bun.lock",
-    "gql": "graphql-codegen"
-  },
-  "dependencies": {
-    "@apollo/client": "^4.0.3",
-    "@apollo/client-integration-nextjs": "^0.13.0",
-    "@apollo/server": "^5.0.0",
-    "@as-integrations/next": "^4.0.0",
-    "@auth/prisma-adapter": "^2.11.2",
-    "@hookform/resolvers": "^5.2.1",
-    "@pothos/core": "^4.9.0",
-    "@pothos/plugin-prisma": "^4.14.3",
-    "@pothos/plugin-relay": "^4.6.2",
-    "@pothos/plugin-scope-auth": "^4.1.5",
-    "@pothos/plugin-zod": "^4.2.2",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
-    "@prisma/extension-accelerate": "^3.0.1",
-    "@radix-ui/react-avatar": "^1.1.10",
-    "@radix-ui/react-dialog": "^1.1.15",
-    "@radix-ui/react-dropdown-menu": "^2.1.16",
-    "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-popover": "^1.1.15",
-    "@radix-ui/react-select": "^2.2.6",
-    "@radix-ui/react-separator": "^1.1.7",
-    "@radix-ui/react-slot": "^1.2.3",
-    "@radix-ui/react-tabs": "^1.1.13",
-    "bcryptjs": "^3.0.2",
-    "class-validator": "^0.14.2",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "cmdk": "1.1.1",
-    "graphql": "^16.11.0",
-    "graphql-parse-resolve-info": "^4.14.1",
-    "graphql-scalars": "^1.24.2",
-    "ioredis": "^5.7.0",
-    "lucide-react": "^0.540.0",
-    "motion": "^12.23.12",
-    "next": "^16",
-    "next-auth": "^5.0.0-beta.29",
-    "nextjs-toploader": "^3.8.16",
-    "prisma": "^7.8.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-hook-form": "^7.62.0",
-    "react-icons": "^5.5.0",
-    "tailwind-merge": "^3.3.1",
-    "uuid": "^13.0.0",
-    "vaul": "^1.1.2",
-    "zod": "^4.1.5"
-  },
-  "devDependencies": {
-    "@graphql-codegen/cli": "^5.0.7",
-    "@graphql-codegen/fragment-matcher": "^6.0.0",
-    "@tailwindcss/postcss": "^4.1.12",
-    "@types/bcryptjs": "^3.0.0",
-    "@types/node": "^24.3.0",
-    "@types/react": "^19.1.12",
-    "@types/react-dom": "^19.1.9",
-    "autoprefixer": "^10.4.21",
-    "cuid": "^3.0.0",
-    "dotenv": "^17.2.2",
-    "eslint": "^9.34.0",
-    "eslint-config-next": "^16",
-    "tailwindcss": "^4.1.12",
-    "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.9.2"
+    "dev": "bun run --filter @kk/web --filter @kk/api-server dev",
+    "dev:web": "bun run --filter @kk/web dev",
+    "dev:api": "bun run --filter @kk/api-server dev",
+    "build": "bun run --filter @kk/web build",
+    "lint": "bun run --filter @kk/web lint",
+    "gql": "bun run --filter @kk/graphql gql",
+    "prisma-sanity": "bun run --filter @kk/web prisma-sanity",
+    "review-packet": "bun run --filter @kk/web review-packet"
   },
   "engines": {
     "node": "22.x"
   },
+  "trustedDependencies": [
+    "prisma"
+  ],
   "resolutions": {
-    "graphql": "^16.11.0"
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "overrides": {
+    "p-limit": "4.0.0"
   }
 }
