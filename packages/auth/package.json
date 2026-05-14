@@ -1,0 +1,21 @@
+{
+  "name": "@kk/auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@kk/db": "workspace:*",
+    "google-auth-library": "^10.4.0"
+  },
+  "peerDependencies": {
+    "ioredis": "^5.7.0"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
