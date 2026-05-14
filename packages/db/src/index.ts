@@ -1,6 +1,9 @@
-import { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
+import { Prisma, PrismaClient } from "./generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { withAccelerate } from "@prisma/extension-accelerate";
+
+export * from "./generated/prisma/client";
+export { Prisma, PrismaClient };
 
 function getDatabaseUrl() {
   if (!process.env.DATABASE_URL) {
@@ -38,8 +41,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: ReturnType<typeof createPrismaClient> | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ?? createPrismaClient();
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

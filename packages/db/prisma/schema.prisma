@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../src/lib/generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -94,16 +94,38 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?       @unique
   emailVerified DateTime?
   image         String?
   password      String?
   accounts      Account[]
   sessions      Session[]
-  recipes       Recipe[]  @relation(name: "AuthoredRecipes")
-  favorites     Recipe[]  @relation(name: "FavoritedRecipes")
+  mobileTokens  MobileToken[]
+  recipes       Recipe[]      @relation(name: "AuthoredRecipes")
+  favorites     Recipe[]      @relation(name: "FavoritedRecipes")
+}
+
+/// Long-lived mobile session — one row per device/refresh-token pair.
+/// Access tokens are NOT stored here; they live only in Redis with a
+/// short TTL and reference this row's id for cache eviction on rotate
+/// or revoke.
+model MobileToken {
+  id               String    @id @default(cuid())
+  userId           String
+  refreshTokenHash String    @unique
+  device           String?
+  userAgent        String?
+  createdAt        DateTime  @default(now())
+  lastUsedAt       DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model VerificationToken {
@@ -116,6 +138,6 @@ model VerificationToken {
 
 generator pothos {
   provider     = "prisma-pothos-types"
-  clientOutput = "./prisma"
-  output       = "../src/lib/generated/pothos-prisma.ts"
+  clientOutput = "@kk/db"
+  output       = "../../api/src/generated/pothos-prisma.ts"
 }
