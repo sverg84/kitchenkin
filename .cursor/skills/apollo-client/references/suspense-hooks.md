@@ -729,11 +729,11 @@ const GET_USER = gql`
 function UserProfile({ userId }: { userId: string | null }) {
   const { data, dataState } = useSuspenseQuery(
     GET_USER,
-    !userId ? skipToken : (
-      {
-        variables: { id: userId },
-      }
-    )
+    !userId
+      ? skipToken
+      : {
+          variables: { id: userId },
+        },
   );
 
   if (dataState !== "complete") {

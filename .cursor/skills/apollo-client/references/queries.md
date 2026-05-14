@@ -40,7 +40,13 @@ function Dogs() {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
-  return <ul>{data?.dogs.map((dog) => <li key={dog.id}>{dog.breed}</li>)}</ul>;
+  return (
+    <ul>
+      {data?.dogs.map((dog) => (
+        <li key={dog.id}>{dog.breed}</li>
+      ))}
+    </ul>
+  );
 }
 ```
 
@@ -301,7 +307,11 @@ function DogList() {
       <button onClick={() => refetch({ breed: "poodle" })}>
         Refetch Poodles
       </button>
-      <ul>{data?.dogs.map((dog) => <li key={dog.id}>{dog.breed}</li>)}</ul>
+      <ul>
+        {data?.dogs.map((dog) => (
+          <li key={dog.id}>{dog.breed}</li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -379,11 +389,11 @@ import { skipToken } from "@apollo/client";
 function UserProfile({ userId }: { userId: string | null }) {
   const { data } = useQuery(
     GET_USER,
-    !userId ? skipToken : (
-      {
-        variables: { id: userId },
-      }
-    )
+    !userId
+      ? skipToken
+      : {
+          variables: { id: userId },
+        },
   );
 
   return userId ? <Profile user={data?.user} /> : <p>Select a user</p>;

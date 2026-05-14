@@ -253,7 +253,11 @@ function UserList() {
 
   // data.users is automatically typed as GetUsersQuery['users']
   return (
-    <ul>{data?.users.map((user) => <li key={user.id}>{user.name}</li>)}</ul>
+    <ul>
+      {data?.users.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
   );
 }
 ```
@@ -418,7 +422,7 @@ console.log(
         email
       }
     `,
-  })
+  }),
 );
 ```
 

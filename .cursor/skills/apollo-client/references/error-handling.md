@@ -286,7 +286,7 @@ const retryLink = new RetryLink({
     if (
       operation.query.definitions.some(
         (def) =>
-          def.kind === "OperationDefinition" && def.operation === "mutation"
+          def.kind === "OperationDefinition" && def.operation === "mutation",
       )
     ) {
       return false;

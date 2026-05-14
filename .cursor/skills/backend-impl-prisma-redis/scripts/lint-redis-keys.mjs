@@ -2,7 +2,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
+const SOURCE_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+]);
 const REDIS_METHODS = ["get", "set", "mget", "mset", "del", "expire"];
 
 function parseArgs(argv) {
@@ -59,7 +66,7 @@ async function walkFiles(dir) {
 function collectCalls(content) {
   const pattern = new RegExp(
     String.raw`redis\.(?:${REDIS_METHODS.join("|")})\s*\(\s*([^,\n\)]+)`,
-    "g"
+    "g",
   );
 
   const calls = [];
@@ -125,8 +132,8 @@ function toMarkdown(results, namespace) {
     for (const finding of result.findings) {
       lines.push(
         `- line ${finding.lineNumber}: \`${finding.keyExpression}\` -> ${finding.issues.join(
-          "; "
-        )}`
+          "; ",
+        )}`,
       );
     }
     lines.push("");
@@ -183,14 +190,14 @@ async function main() {
       for (const finding of result.findings) {
         console.log(
           `[lint-redis-keys] ${result.file}:${finding.lineNumber} ${finding.issues.join(
-            ", "
-          )} | ${finding.keyExpression}`
+            ", ",
+          )} | ${finding.keyExpression}`,
         );
       }
     }
     if (!args.strict) {
       console.log(
-        "[lint-redis-keys] warnings only (non-strict mode). Use --strict to fail on findings."
+        "[lint-redis-keys] warnings only (non-strict mode). Use --strict to fail on findings.",
       );
     }
   }
@@ -201,7 +208,7 @@ async function main() {
     await fs.writeFile(
       reportPath,
       toMarkdown(invalidResults, args.namespace),
-      "utf8"
+      "utf8",
     );
     console.log(`[lint-redis-keys] report written: ${args.report}`);
   }

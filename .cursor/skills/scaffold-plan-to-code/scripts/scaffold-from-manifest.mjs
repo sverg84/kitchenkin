@@ -31,7 +31,7 @@ function parseArgs(argv) {
 
 function usage() {
   console.error(
-    "Usage: node scaffold-from-manifest.mjs --manifest <path> [--force] [--dry-run]"
+    "Usage: node scaffold-from-manifest.mjs --manifest <path> [--force] [--dry-run]",
   );
 }
 
@@ -119,8 +119,8 @@ async function main() {
       typeof file.contents === "string"
         ? file.contents
         : typeof file.template === "string"
-        ? templateContent(file.template, file.path)
-        : "";
+          ? templateContent(file.template, file.path)
+          : "";
 
     await createFile(absolutePath, content, args.force, args.dryRun);
   }

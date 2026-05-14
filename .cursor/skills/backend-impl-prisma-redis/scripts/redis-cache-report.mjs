@@ -2,7 +2,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
+const SOURCE_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+]);
 const REDIS_METHODS = ["get", "set", "mget", "mset", "del", "expire"];
 
 function parseArgs(argv) {
@@ -47,7 +54,7 @@ async function walkFiles(dir) {
 function extractCalls(content) {
   const pattern = new RegExp(
     String.raw`redis\.(?<method>${REDIS_METHODS.join("|")})\s*\(\s*(?<key>[^,\n\)]+)`,
-    "g"
+    "g",
   );
 
   const calls = [];
@@ -91,8 +98,8 @@ function renderReport(repoRoot, callSites) {
     lines.push(
       `- \`${site.method}\` \`${site.keyExpression}\` at \`${path.relative(
         repoRoot,
-        site.file
-      )}:${site.lineNumber}\``
+        site.file,
+      )}:${site.lineNumber}\``,
     );
   }
 
@@ -114,7 +121,7 @@ function renderReport(repoRoot, callSites) {
     "- List write paths that touch cached entities.",
     "- For each write path, list key prefixes to invalidate.",
     "- Prefer prefix/version invalidation strategy over ad hoc key deletes.",
-    "- Verify user-scoped caches include user identity in key shape."
+    "- Verify user-scoped caches include user identity in key shape.",
   );
 
   return `${lines.join("\n")}\n`;

@@ -10,7 +10,7 @@ Use these KitchenKin repo skills **conditionally** based on what the user asks f
 ### GraphQL-first contract/design work
 
 Invoke `.cursor/skills/backend-graphql-feature-design/SKILL.md` when work includes any of:
-- Adding/changing GraphQL types, queries, or mutations
+- Adding/changing GraphQL types, queries, or mutations (schema lives in **`packages/api/src/schema/`**; HTTP server is **`apps/api`**)
 - Designing new GraphQL API contracts (even if not implementing yet)
 - Deciding pagination/filter/sort shapes, connection conventions, or fragment structure
 
@@ -24,8 +24,8 @@ Invoke `.cursor/skills/backend-impl-prisma-redis/SKILL.md` when work includes an
 ### Frontend implementation (Next.js UI + Tailwind + shadcn/radix + Apollo)
 
 Invoke `.cursor/skills/frontend-feature-implementation/SKILL.md` when work includes any of:
-- Adding/modifying `src/app/**` routes/pages or `src/components/**` UI
-- Wiring Apollo queries/mutations/fragments into UI components
+- Adding/modifying **`apps/web/src/app/**`** routes/pages or **`apps/web/src/components/**`** UI
+- Wiring Apollo queries/mutations/fragments into UI components (shared ops often under **`packages/graphql`**)
 - Implementing loading/empty/error states, accessibility, or interaction patterns
 
 ### Maintainability reviews and refactors

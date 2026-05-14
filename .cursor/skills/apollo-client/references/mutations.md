@@ -355,7 +355,7 @@ const [deleteTodo] = useMutation(DELETE_TODO, {
       fields: {
         todos: (existingTodos: Reference[], { readField }) => {
           return existingTodos.filter(
-            (todoRef) => readField("id", todoRef) !== data.deleteTodo.id
+            (todoRef) => readField("id", todoRef) !== data.deleteTodo.id,
           );
         },
       },
@@ -539,7 +539,7 @@ const handleSubmit = async (input: CreateUserInput) => {
       }
       return acc;
     },
-    {} as Record<string, string>
+    {} as Record<string, string>,
   );
 
   if (fieldErrors?.email) {

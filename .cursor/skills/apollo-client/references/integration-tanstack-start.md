@@ -254,7 +254,6 @@ function UserComponent({ queryRef }: { queryRef: QueryRef<GetUserQuery> }) {
 2. **Context Type:** Use `createRootRouteWithContext<ApolloClientIntegration.RouterContext>()` to provide proper TypeScript types for the `preloadQuery` function in loaders.
 
 3. **Loader vs Component Queries:**
-
    - Use `preloadQuery` in loaders when you want to start fetching data before the component renders
    - Use `useSuspenseQuery` directly in components for simpler cases or when data fetching can wait until render
 

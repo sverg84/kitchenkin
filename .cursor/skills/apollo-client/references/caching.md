@@ -383,7 +383,9 @@ function PostList() {
 
   return (
     <div>
-      {data?.posts.map((post) => <PostCard key={post.id} post={post} />)}
+      {data?.posts.map((post) => (
+        <PostCard key={post.id} post={post} />
+      ))}
       <button onClick={loadMore} disabled={loading}>
         Load More
       </button>
