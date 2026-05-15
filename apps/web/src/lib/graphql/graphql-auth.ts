@@ -28,10 +28,24 @@ const SKEW_MS = 45_000;
 
 let browserBearerCache: { token: string; expiresAtMs: number } | null = null;
 
+function browserLikelyHasSessionCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  const c = document.cookie;
+  return (
+    c.includes("authjs.session-token") ||
+    c.includes("__Secure-authjs.session-token")
+  );
+}
+
 export async function getBrowserGraphqlExtraHeaders(): Promise<
   Record<string, string>
 > {
   if (typeof window === "undefined") return {};
+
+  if (!browserLikelyHasSessionCookie()) {
+    browserBearerCache = null;
+    return {};
+  }
 
   const now = Date.now();
   if (browserBearerCache && browserBearerCache.expiresAtMs - SKEW_MS > now) {

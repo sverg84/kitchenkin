@@ -1,8 +1,23 @@
 /**
- * Remote GraphQL on standalone `apps/api` (`NEXT_PUBLIC_GRAPHQL_URI`).
+ * Remote GraphQL on standalone `apps/api` (`NEXT_PUBLIC_GRAPHQL_URI`), or
+ * same-origin `/api/graphql` when `NEXT_PUBLIC_GRAPHQL_SAME_ORIGIN_PROXY` is
+ * enabled (see `apps/web/src/app/api/graphql/route.ts`).
  */
 
-export function graphqlUri(): string {
+export function graphqlUri(appOriginOverride?: string | null): string {
+  if (process.env.NEXT_PUBLIC_GRAPHQL_SAME_ORIGIN_PROXY === "true") {
+    if (appOriginOverride) {
+      try {
+        return `${new URL(appOriginOverride).origin}/api/graphql`;
+      } catch {
+        /* fall through */
+      }
+    }
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/api/graphql`;
+    }
+    return `${resolveWebAppOriginFromEnv()}/api/graphql`;
+  }
   return process.env.NEXT_PUBLIC_GRAPHQL_URI ?? "http://localhost:4000/graphql";
 }
 

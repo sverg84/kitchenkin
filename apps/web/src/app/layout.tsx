@@ -8,7 +8,10 @@ import { UserMenu } from "@/components/auth/user-menu";
 import Link from "next/link";
 import NextTopLoader from "nextjs-toploader";
 
-const quicksand = Quicksand({ subsets: ["latin"] });
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  preload: false,
+});
 
 export const metadata: Metadata = {
   title: "Recipe App",

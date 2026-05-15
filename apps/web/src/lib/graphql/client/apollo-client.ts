@@ -22,7 +22,7 @@ export function makeClient(
   cookie?: string | null,
   appOrigin?: string,
 ): ApolloClient {
-  const uri = graphqlUri();
+  const uri = graphqlUri(appOrigin);
   const useBridge = shouldUseBearerBridge(uri);
   const isServer = typeof window === "undefined";
 
