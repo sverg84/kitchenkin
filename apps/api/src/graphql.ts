@@ -1,8 +1,6 @@
 import type { ApolloServer } from "@apollo/server";
 import type { GraphQLContext } from "@kk/api";
 import type { Context } from "hono";
-
-import { SimpleMapCache } from "./apollo-cache";
 import { resolveUser } from "./context";
 
 let serverPromise: Promise<ApolloServer<GraphQLContext>> | undefined;
@@ -18,10 +16,7 @@ async function initServer(): Promise<ApolloServer<GraphQLContext>> {
   const { ApolloServer } = await import("@apollo/server");
   const { createSchema } = await import("@kk/api");
   const schema = createSchema();
-  const server = new ApolloServer<GraphQLContext>({
-    schema,
-    cache: new SimpleMapCache(),
-  });
+  const server = new ApolloServer<GraphQLContext>({ schema });
   await server.start();
   return server;
 }

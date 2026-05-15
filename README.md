@@ -149,7 +149,7 @@ Local env file: **`apps/web/.env`** (gitignored).
 
 ### API (`apps/api`)
 
-Vercel uses [`apps/api/vercel.json`](apps/api/vercel.json) (`bunVersion`) and the `vercel-build` script in [`apps/api/package.json`](apps/api/package.json) (`prisma:generate` only; migrations run on web).
+Vercel uses [`apps/api/vercel.json`](apps/api/vercel.json) (`bunVersion`) and the `vercel-build` script in [`apps/api/package.json`](apps/api/package.json) (`prisma:generate`, then `bun build` to `src/app.bundle.js` plus a thin `src/index.ts` stub for the Hono builder; other `src/*.ts` removed on Vercel). For local packaging checks, run `VERCEL=1 bunx vercel build` from `apps/api`. Migrations run on web.
 
 | Variable | Required | Production |
 |----------|----------|------------|

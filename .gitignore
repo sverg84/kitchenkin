@@ -20,6 +20,8 @@ node_modules/
 # production
 /build
 apps/api/dist/
+apps/api/index.js
+apps/api/src/app.bundle.js
 
 # misc
 .DS_Store
