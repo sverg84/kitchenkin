@@ -121,6 +121,47 @@ EXPO_PUBLIC_API_BASE=https://api.example.com
 
 ## Deploy
 
-- **Web** is deployed on Vercel with the project root set to **`apps/web`**. For same-origin GraphQL (see Stack → Web), set **`NEXT_PUBLIC_GRAPHQL_SAME_ORIGIN_PROXY=true`**, **`GRAPHQL_UPSTREAM_URL`** (full URL to **`apps/api`** `/graphql`, no redirects), and **`NEXT_PUBLIC_APP_ORIGIN`** to your canonical site origin.
-- **`apps/api`** needs a **separate** host (container, VM, or serverless Bun) with env: **`DATABASE_URL`**, **`REDIS_URL`**, **`CORS_ALLOWED_ORIGINS`** (include every browser origin that calls the API **directly**, e.g. `https://www.kitchenkin.app` if the web app still uses cross-origin GraphQL without the proxy), **`GOOGLE_MOBILE_CLIENT_IDS`** (if mobile Google sign-in), and the same auth-related secrets you use for Prisma/Redis as in local dev.
+KitchenKin uses **two Vercel projects** on the same Git repo ([monorepos](https://vercel.com/docs/monorepos)): set each project’s **Root Directory** to `apps/web` (web) and `apps/api` (API). Link both from the repo root with `vercel link --repo` if you use the CLI.
+
+**Prisma Postgres:** create or connect a database from the **web** project’s **Storage** tab, then use the **same** `DATABASE_URL` on both projects. Prefer enabling the connection for **Production** only so preview deploys do not run migrations against prod (`vercel-build` on web runs `prisma migrate deploy`). Recover a lost URL from [Prisma Console](https://console.prisma.io) or Vercel Storage — sensitive values cannot be re-read from the dashboard.
+
+**Deploy order:** redeploy **web** first (migrations + Next build), then **api**.
+
+### Web (`apps/web`)
+
+| Variable | Required | Production |
+|----------|----------|------------|
+| `DATABASE_URL` | Yes | Prisma Postgres URL (shared with API) |
+| `REDIS_URL` | Yes | Production Redis (web-bearer, sessions) |
+| `AUTH_URL` | Yes | `https://www.kitchenkin.app` |
+| `AUTH_SECRET` | Yes | NextAuth secret |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | If using Google | OAuth console |
+| `AUTH_REDDIT_ID`, `AUTH_REDDIT_SECRET` | If using Reddit | OAuth console |
+| `AUTH_SENDGRID_KEY` | If using email magic links | SendGrid |
+| `NEXT_PUBLIC_APP_ORIGIN` | Yes (with proxy) | `https://www.kitchenkin.app` |
+| `NEXT_PUBLIC_GRAPHQL_SAME_ORIGIN_PROXY` | Yes (custom domain) | `true` |
+| `GRAPHQL_UPSTREAM_URL` | Yes (with proxy) | `https://<api-host>/graphql` — stable API host, path `/graphql`, no redirect on `OPTIONS` |
+| `IMAGE_UPLOAD_ENDPOINT`, `IMAGE_DELETE_ENDPOINT`, `DETECT_ALLERGENS_ENDPOINT` | If using those features | Lambda HTTP URLs |
+| `NEXT_PUBLIC_GRAPHQL_URI` | Local dev only | `http://localhost:4000/graphql` — do **not** point prod at `*.vercel.app` if it redirects |
+| `SHADOW_DATABASE_URL` | Local `migrate dev` only | Not needed on Vercel |
+
+Local env file: **`apps/web/.env`** (gitignored).
+
+### API (`apps/api`)
+
+| Variable | Required | Production |
+|----------|----------|------------|
+| `DATABASE_URL` | Yes | Same as web |
+| `REDIS_URL` | Yes | Same as web |
+| `CORS_ALLOWED_ORIGINS` | Recommended | `https://www.kitchenkin.app,https://kitchenkin.app` (comma-separated; needed for direct browser/mobile calls) |
+| `PORT` | Optional | `4000` (Vercel may inject `PORT`) |
+| `GOOGLE_MOBILE_CLIENT_IDS` | If using mobile Google sign-in | Comma-separated client ids |
+
+Local env file: **`apps/api/.env`** (gitignored).
+
+### Verify production
+
+- Browser GraphQL requests go to **`https://www.kitchenkin.app/api/graphql`**, not a separate `*.vercel.app` host.
+- **`GRAPHQL_UPSTREAM_URL`** matches the deployed API project’s `/graphql` endpoint.
+
 - **Lambdas** are manually deployed (see [lambda/README.md](lambda/README.md)).
