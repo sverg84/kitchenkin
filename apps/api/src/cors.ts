@@ -10,6 +10,11 @@ import { env } from "./env";
  * A literal `*` entry disables the check (useful only for local dev).
  * Entries beginning with `*.` are treated as suffix-match wildcards
  * (e.g. `*.vercel.app` matches any Vercel preview deploy).
+ *
+ * Production: include every browser origin that calls the API directly
+ * (e.g. `https://www.kitchenkin.app` and `https://kitchenkin.app` if both
+ * are used). Prefer same-origin GraphQL via the web app proxy so the
+ * browser does not cross origins to a host that redirects on OPTIONS.
  */
 export const apiCors = cors({
   origin: (origin) => {
