@@ -1,9 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "bunVersion": "1.x",
-  "functions": {
-    "src/index.ts": {
-      "includeFiles": "{node_modules,../../node_modules}/lru-cache/**"
-    }
-  }
+  "bunVersion": "1.x"
 }
