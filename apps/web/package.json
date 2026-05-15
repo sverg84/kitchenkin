@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "bun run --filter @kk/db prisma:generate && next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint --config eslint.config.mjs --max-warnings 0 .",
     "vercel-build": "bun run --filter @kk/db prisma:generate && bun run --filter @kk/db prisma:migrate:deploy && next build",
     "clean": "rm -rf node_modules .next",
     "gql": "bun run --filter @kk/graphql gql",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@apollo/client": "^4.0.3",
-    "@apollo/client-integration-nextjs": "^0.13.0",
+    "@apollo/client-integration-nextjs": "^0.14.5",
     "@hookform/resolvers": "^5.2.1",
     "@kk/auth": "workspace:*",
     "@kk/db": "workspace:*",
