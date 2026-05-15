@@ -149,6 +149,8 @@ Local env file: **`apps/web/.env`** (gitignored).
 
 ### API (`apps/api`)
 
+Vercel uses [`apps/api/vercel.json`](apps/api/vercel.json) (`bunVersion`) and the `vercel-build` script in [`apps/api/package.json`](apps/api/package.json) (`prisma:generate` only; migrations run on web).
+
 | Variable | Required | Production |
 |----------|----------|------------|
 | `DATABASE_URL` | Yes | Same as web |

@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "vercel-build": "bun run --filter @kk/db prisma:generate"
   },
   "dependencies": {
     "@apollo/server": "^5.0.1",
