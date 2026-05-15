@@ -1,9 +1,10 @@
 import { ApolloServer, HeaderMap } from "@apollo/server";
-import { schema, type GraphQLContext } from "@kk/api";
+import { createSchema, type GraphQLContext } from "@kk/api";
 import type { Context } from "hono";
 
 import { resolveUser } from "./context";
 
+const schema = createSchema();
 const server = new ApolloServer<GraphQLContext>({ schema });
 
 // Apollo's executeHTTPGraphQLRequest requires the server to be started.

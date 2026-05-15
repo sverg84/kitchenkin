@@ -3,8 +3,6 @@ import { Hono } from "hono";
 import { mobileAuthHandlers } from "./auth";
 import { apiCors } from "./cors";
 import { env } from "./env";
-import { graphqlHandler } from "./graphql";
-
 /**
  * Bun + Hono entry point for the standalone KitchenKin API.
  *
@@ -29,7 +27,10 @@ app.get("/healthz", (c) =>
   }),
 );
 
-app.on(["GET", "POST"], "/graphql", graphqlHandler);
+app.on(["GET", "POST"], "/graphql", async (c) => {
+  const { graphqlHandler } = await import("./graphql");
+  return graphqlHandler(c);
+});
 
 app.post("/auth/mobile/exchange", (c) =>
   mobileAuthHandlers.exchange(c.req.raw),

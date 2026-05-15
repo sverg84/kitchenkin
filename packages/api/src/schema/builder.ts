@@ -2,7 +2,7 @@ import { prisma } from "@kk/db";
 import type PrismaTypes from "../generated/pothos-prisma";
 import { getDatamodel } from "../generated/pothos-prisma";
 import type { GraphQLContext } from "../context";
-import SchemaBuilder from "@pothos/core";
+import { SchemaBuilder } from "../pothos-schema-builder";
 import PrismaPlugin from "@pothos/plugin-prisma";
 import ScopeAuthPlugin from "@pothos/plugin-scope-auth";
 import RelayPlugin from "@pothos/plugin-relay";

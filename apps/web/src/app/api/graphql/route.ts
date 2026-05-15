@@ -78,7 +78,15 @@ async function proxyToUpstream(request: Request): Promise<Response> {
     init.body = await request.arrayBuffer();
   }
 
-  const upstreamRes = await fetch(upstream, init);
+  let upstreamRes: Response;
+  try {
+    upstreamRes = await fetch(upstream, init);
+  } catch {
+    return NextResponse.json(
+      { errors: [{ message: "GraphQL upstream unavailable" }] },
+      { status: 502 },
+    );
+  }
   const resHeaders = new Headers(upstreamRes.headers);
   return new Response(upstreamRes.body, {
     status: upstreamRes.status,
