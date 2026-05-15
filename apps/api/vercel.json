@@ -3,7 +3,7 @@
   "bunVersion": "1.x",
   "functions": {
     "src/index.ts": {
-      "includeFiles": "../../node_modules/lru-cache/**"
+      "includeFiles": "{node_modules,../../node_modules}/lru-cache/**"
     }
   }
 }
