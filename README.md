@@ -69,10 +69,9 @@ bun run --filter @kk/web <script>
 bun run --filter @kk/api-server <script>
 ```
 
-### GraphQL codegen (two outputs)
+### GraphQL codegen
 
-- **`bun run gql`** (root or `apps/web`) runs **`packages/graphql/codegen.yml`** → output under **`packages/graphql/src/generated/`** (imported as **`@kk/graphql`**). Point the schema URL at a running **`apps/api`** (`http://localhost:4000/graphql` by default), or use the SDL workflow below.
-- Some files under **`apps/web/src/lib/graphql/`** import the `graphql` tag from **`@/lib/generated/graphql`**. Regenerate that tree with **`bunx graphql-codegen --config apps/web/codegen.yml`** from the repo root (same schema URL requirement), when you change those documents.
+- **`bun run gql`** (root or `apps/web`) runs **`packages/graphql/codegen.yml`** → output under **`packages/graphql/src/generated/`** (imported as **`@kk/graphql`**). Point the schema URL at a running **`apps/api`** (`http://localhost:4000/graphql` by default), or use the SDL workflow below. Web and mobile should import operations from **`@kk/graphql`** only (no second codegen tree under `apps/web`).
 
 ### Lambda packaging
 
@@ -86,7 +85,7 @@ bun run zip:bundle        # esbuild single-file bundle + zip
 
 ## Stack
 
-- **Web:** Next.js 16 (App Router), React 19, Tailwind 4, shadcn/radix-ui. GraphQL client talks to **`apps/api`** (`NEXT_PUBLIC_GRAPHQL_URI`); session cookies stay on the web origin; **`POST /api/auth/web-bearer`** mints a short-lived bearer for cross-origin API calls.
+- **Web:** Next.js 16 (App Router), React 19, Tailwind 4, shadcn/radix-ui. By default the GraphQL client uses **`NEXT_PUBLIC_GRAPHQL_URI`** (standalone **`apps/api`**, path **`/graphql`**). Session cookies stay on the web origin; **`POST /api/auth/web-bearer`** mints a short-lived bearer for **cross-origin** API calls. **Recommended for production custom domains:** set **`NEXT_PUBLIC_GRAPHQL_SAME_ORIGIN_PROXY=true`** so the browser calls **`/api/graphql`** on the same host (no CORS preflight to a `*.vercel.app` URL that redirects). On the **web** Vercel project set **`GRAPHQL_UPSTREAM_URL`** to the **stable** API GraphQL URL (server-only; must not redirect on `OPTIONS`). For SSR, set **`NEXT_PUBLIC_APP_ORIGIN`** (or **`AUTH_URL`**) to the public web origin (e.g. `https://www.kitchenkin.app`) so the server builds the correct proxy URL.
 - **Mobile:** Expo SDK 55 (Expo Router) + Apollo Client 4, sharing `@kk/graphql`/`@kk/shared`. Defaults to **`http://<dev-host>:4000`** for the API in dev (see `apps/mobile/src/lib/api.ts`).
 - **API:** **`apps/api`** — Bun + Hono, Apollo Server 5, Pothos schema from **`packages/api`**, Prisma via **`@kk/db`**, Redis via **`@kk/auth`** token helpers.
 - **Auth:** next-auth v5 (beta) on web (database sessions); opaque Redis-backed bearer tokens for mobile and web-bridge tokens (`@kk/auth`).
@@ -122,6 +121,6 @@ EXPO_PUBLIC_API_BASE=https://api.example.com
 
 ## Deploy
 
-- **Web** is deployed on Vercel with the project root set to **`apps/web`**.
-- **`apps/api`** needs a **separate** host (container, VM, or serverless Bun) with env: **`DATABASE_URL`**, **`REDIS_URL`**, **`CORS_ALLOWED_ORIGINS`** (include your web origin), **`GOOGLE_MOBILE_CLIENT_IDS`** (if mobile Google sign-in), and the same auth-related secrets you use for Prisma/Redis as in local dev.
+- **Web** is deployed on Vercel with the project root set to **`apps/web`**. For same-origin GraphQL (see Stack → Web), set **`NEXT_PUBLIC_GRAPHQL_SAME_ORIGIN_PROXY=true`**, **`GRAPHQL_UPSTREAM_URL`** (full URL to **`apps/api`** `/graphql`, no redirects), and **`NEXT_PUBLIC_APP_ORIGIN`** to your canonical site origin.
+- **`apps/api`** needs a **separate** host (container, VM, or serverless Bun) with env: **`DATABASE_URL`**, **`REDIS_URL`**, **`CORS_ALLOWED_ORIGINS`** (include every browser origin that calls the API **directly**, e.g. `https://www.kitchenkin.app` if the web app still uses cross-origin GraphQL without the proxy), **`GOOGLE_MOBILE_CLIENT_IDS`** (if mobile Google sign-in), and the same auth-related secrets you use for Prisma/Redis as in local dev.
 - **Lambdas** are manually deployed (see [lambda/README.md](lambda/README.md)).

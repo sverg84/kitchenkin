@@ -20,10 +20,10 @@ Paths are from the monorepo root; the Next app lives under **`apps/web/`**.
   - Provider: `apps/web/src/lib/graphql/client/apollo-provider.tsx`
   - Apollo wiring / server fetch: `apps/web/src/lib/graphql/client/*.ts`, `apps/web/src/lib/graphql/server-fetch.ts`, `apps/web/src/lib/graphql/graphql-auth.ts`, `apps/web/src/lib/graphql/graphql-remote.ts`
 - **Shared GraphQL operations & hooks**: `packages/graphql/src/**` (queries, fragments, hooks; codegen output under `packages/graphql/src/generated/`)
-- **Web re-exports / local hooks**: `apps/web/src/lib/graphql/**` where the app still mirrors or extends `@kk/graphql`
+- **Web-only GraphQL wiring**: `apps/web/src/lib/graphql/**` (Apollo factory, auth headers, optional same-origin proxy at `apps/web/src/app/api/graphql/route.ts`)
 - **Generated types (import in app code)**: `@kk/graphql` (e.g. `graphql.ts`, `gql`)
 
-The browser talks to **`apps/api`** for GraphQL (`NEXT_PUBLIC_GRAPHQL_URI`); session cookies stay on the web origin; use **`POST /api/auth/web-bearer`** + `Authorization` for the API (see `graphql-auth.ts` / `apollo-client.ts`).
+The browser talks to **`apps/api`** via `NEXT_PUBLIC_GRAPHQL_URI`, or to same-origin **`/api/graphql`** when `NEXT_PUBLIC_GRAPHQL_SAME_ORIGIN_PROXY=true` (see `graphql-remote.ts` and the proxy route). Session cookies stay on the web origin; for **cross-origin** API calls use **`POST /api/auth/web-bearer`** + `Authorization` (see `graphql-auth.ts` / `apollo-client.ts`).
 
 ## Inputs to gather (ask only if needed)
 
