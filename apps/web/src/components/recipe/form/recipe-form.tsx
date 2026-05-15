@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -97,7 +97,11 @@ export function RecipeForm({
         : [{ name: "", amount: "", unit: "" }],
     },
   });
-  const { control, handleSubmit, getValues, setValue, watch } = form;
+  const { control, handleSubmit, getValues, setValue } = form;
+
+  const instructions =
+    useWatch({ control, name: "instructions" }) ?? [""];
+  const imageFileName = useWatch({ control, name: "image.fileName" });
 
   function getDirtyValues(): Partial<RecipeFormData> {
     const dirtyFields = form.formState.dirtyFields;
@@ -159,8 +163,6 @@ export function RecipeForm({
     control,
     name: "ingredients",
   });
-
-  const instructions = watch("instructions");
 
   const handleAddInstruction = () => {
     setValue("instructions", [...instructions, ""]);
@@ -281,7 +283,7 @@ export function RecipeForm({
                     Choose File
                   </Button>
                   <span className="self-center">
-                    {watch("image.fileName") || "No image selected"}
+                    {imageFileName || "No image selected"}
                   </span>
                 </div>
               </div>
