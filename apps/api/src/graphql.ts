@@ -1,25 +1,36 @@
-import { ApolloServer, HeaderMap } from "@apollo/server";
-import { createSchema, type GraphQLContext } from "@kk/api";
+import type { ApolloServer } from "@apollo/server";
+import type { GraphQLContext } from "@kk/api";
 import type { Context } from "hono";
 
 import { resolveUser } from "./context";
 
-const schema = createSchema();
-const server = new ApolloServer<GraphQLContext>({ schema });
+let serverPromise: Promise<ApolloServer<GraphQLContext>> | undefined;
 
-// Apollo's executeHTTPGraphQLRequest requires the server to be started.
-// Bun's top-level await is supported; this resolves once before the
-// first request is served.
-await server.start();
+async function getServer(): Promise<ApolloServer<GraphQLContext>> {
+  if (!serverPromise) {
+    serverPromise = initServer();
+  }
+  return serverPromise;
+}
+
+async function initServer(): Promise<ApolloServer<GraphQLContext>> {
+  const { ApolloServer } = await import("@apollo/server");
+  const { createSchema } = await import("@kk/api");
+  const schema = createSchema();
+  const server = new ApolloServer<GraphQLContext>({ schema });
+  await server.start();
+  return server;
+}
 
 /**
  * Hono handler that adapts incoming Fetch-API requests to Apollo's
- * transport-agnostic `executeHTTPGraphQLRequest`. We do this directly
- * (rather than depending on a third-party `@as-integrations/hono`
- * adapter that may not exist) so we control the request/response
- * shape and avoid an extra dep.
+ * transport-agnostic `executeHTTPGraphQLRequest`. GraphQL stack is loaded
+ * on first use so /healthz and other routes avoid Bun ESM init ordering
+ * issues at cold start.
  */
 export async function graphqlHandler(c: Context): Promise<Response> {
+  const { HeaderMap } = await import("@apollo/server");
+  const server = await getServer();
   const req = c.req.raw;
 
   const headerMap = new HeaderMap();
@@ -29,8 +40,6 @@ export async function graphqlHandler(c: Context): Promise<Response> {
 
   const url = new URL(req.url);
 
-  // For POST, parse JSON body (Apollo expects an already-parsed body).
-  // For GET, the operation lives in the query string and body is null.
   let body: unknown;
   if (req.method === "POST") {
     try {
@@ -64,7 +73,6 @@ export async function graphqlHandler(c: Context): Promise<Response> {
     });
   }
 
-  // Chunked async-iterator response (e.g. @defer/@stream, future use).
   const iterator = httpRes.body.asyncIterator;
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {

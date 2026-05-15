@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 
-import { mobileAuthHandlers } from "./auth";
 import { apiCors } from "./cors";
 import { env } from "./env";
 /**
@@ -32,18 +31,35 @@ app.on(["GET", "POST"], "/graphql", async (c) => {
   return graphqlHandler(c);
 });
 
-app.post("/auth/mobile/exchange", (c) =>
-  mobileAuthHandlers.exchange(c.req.raw),
-);
-app.post("/auth/mobile/refresh", (c) => mobileAuthHandlers.refresh(c.req.raw));
-app.post("/auth/mobile/logout", (c) => mobileAuthHandlers.logout(c.req.raw));
-app.post("/auth/mobile/oauth/google", (c) =>
-  mobileAuthHandlers.oauthGoogle(c.req.raw),
-);
+app.post("/auth/mobile/exchange", async (c) => {
+  const { mobileAuthHandlers } = await import("./auth");
+  return mobileAuthHandlers.exchange(c.req.raw);
+});
+app.post("/auth/mobile/refresh", async (c) => {
+  const { mobileAuthHandlers } = await import("./auth");
+  return mobileAuthHandlers.refresh(c.req.raw);
+});
+app.post("/auth/mobile/logout", async (c) => {
+  const { mobileAuthHandlers } = await import("./auth");
+  return mobileAuthHandlers.logout(c.req.raw);
+});
+app.post("/auth/mobile/oauth/google", async (c) => {
+  const { mobileAuthHandlers } = await import("./auth");
+  return mobileAuthHandlers.oauthGoogle(c.req.raw);
+});
 
-console.log(`[api] listening on http://localhost:${env.port}`);
-
-export default {
+/**
+ * Local `bun run` uses Bun.serve on `{ port, fetch }`. Vercel's Bun runtime
+ * invokes `fetch` only — `Bun.serve` is unsupported there; including `port`
+ * can crash the function before any route runs (FUNCTION_INVOCATION_FAILED).
+ */
+const localServer = {
   port: env.port,
   fetch: app.fetch,
 };
+
+if (!process.env.VERCEL) {
+  console.log(`[api] listening on http://localhost:${env.port}`);
+}
+
+export default process.env.VERCEL ? { fetch: app.fetch } : localServer;
