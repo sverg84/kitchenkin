@@ -10,20 +10,18 @@ export type GraphQLLinkOptions = {
    */
   uri?: string;
   /**
-   * Optional fixed headers (e.g., a forwarded cookie on web SSR or an
-   * `Authorization: Bearer ...` token on mobile).
+   * Optional fixed headers (e.g. forwarded `Cookie` on SSR / mobile).
    */
   headers?: Record<string, string>;
   /**
-   * Per-operation headers (e.g., mint a short-lived bearer). Merged after
-   * {@link GraphQLLinkOptions.headers}. Runs on every GraphQL request.
+   * Per-operation headers merged after fixed {@link GraphQLLinkOptions.headers}.
    */
   getHeaders?:
     | (() => Record<string, string> | Promise<Record<string, string>>)
     | undefined;
   /**
-   * Fetch credentials policy. Defaults to `"include"` so the web app's
-   * NextAuth cookie travels with requests.
+   * Fetch credentials policy. Defaults to `"include"` for browser callers that
+   * send Better Auth cookies to the GraphQL endpoint.
    */
   credentials?: RequestCredentials;
   /**
