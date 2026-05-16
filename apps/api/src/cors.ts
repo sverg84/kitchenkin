@@ -31,6 +31,12 @@ export const apiCors = cors({
   },
   credentials: false,
   allowMethods: ["GET", "POST", "OPTIONS"],
-  allowHeaders: ["authorization", "content-type", "x-apollo-operation-name"],
+  allowHeaders: [
+    "authorization",
+    "content-type",
+    "x-apollo-operation-name",
+    "cookie",
+    "expo-origin",
+  ],
   maxAge: 86400,
 });

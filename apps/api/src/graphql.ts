@@ -1,6 +1,7 @@
 import type { ApolloServer } from "@apollo/server";
 import type { GraphQLContext } from "@kk/api";
 import type { Context } from "hono";
+
 import { resolveUser } from "./context";
 
 let serverPromise: Promise<ApolloServer<GraphQLContext>> | undefined;
@@ -21,12 +22,6 @@ async function initServer(): Promise<ApolloServer<GraphQLContext>> {
   return server;
 }
 
-/**
- * Hono handler that adapts incoming Fetch-API requests to Apollo's
- * transport-agnostic `executeHTTPGraphQLRequest`. GraphQL stack is loaded
- * on first use so /healthz and other routes avoid Bun ESM init ordering
- * issues at cold start.
- */
 export async function graphqlHandler(c: Context): Promise<Response> {
   const { HeaderMap } = await import("@apollo/server");
   const server = await getServer();

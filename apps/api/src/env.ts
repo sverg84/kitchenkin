@@ -12,10 +12,6 @@ function required(name: string): string {
   return value;
 }
 
-function optional(name: string, fallback: string): string {
-  return process.env[name] ?? fallback;
-}
-
 function parseList(value: string | undefined): string[] {
   if (!value) return [];
   return value
@@ -27,21 +23,20 @@ function parseList(value: string | undefined): string[] {
 export interface ApiEnv {
   port: number;
   databaseUrl: string;
-  redisUrl: string;
   /** Comma-separated allowed origins for browser callers. */
   corsAllowedOrigins: string[];
-  /** Comma-separated Google OAuth client ids accepted by /auth/mobile/oauth/google. */
-  googleMobileClientIds: string[];
   nodeEnv: "development" | "production" | "test";
+}
+
+function optional(name: string, fallback: string): string {
+  return process.env[name] ?? fallback;
 }
 
 export function loadEnv(): ApiEnv {
   return {
     port: Number(optional("PORT", "4000")),
     databaseUrl: required("DATABASE_URL"),
-    redisUrl: optional("REDIS_URL", "redis://localhost:6379"),
     corsAllowedOrigins: parseList(process.env.CORS_ALLOWED_ORIGINS),
-    googleMobileClientIds: parseList(process.env.GOOGLE_MOBILE_CLIENT_IDS),
     nodeEnv: (process.env.NODE_ENV as ApiEnv["nodeEnv"]) ?? "development",
   };
 }

@@ -1,32 +1,9 @@
-import {
-  createMobileTokenService,
-  createUserResolver,
-  createWebBearerService,
-} from "@kk/auth";
-
-import { getRedis } from "./redis";
+import { resolveUserFromBetterAuthHeaders } from "@kk/auth/server";
 
 /**
- * Single instance of the mobile token service for this API process.
- * Re-used by both the request resolver below (for bearer validation)
- * and by the mobile auth handlers (for bearer issuance/refresh).
+ * GraphQL identity from the incoming request: Better Auth session cookie
+ * (forwarded by the Next `/api/graphql` proxy or the Expo client via `Cookie`).
  */
-export const tokens = createMobileTokenService({ getRedis });
-
-export const webBearer = createWebBearerService({ getRedis });
-
-/**
- * Resolve the requesting user from an incoming `Request`.
- *
- * The API only ever sees bearer tokens — it never reads cookies (the
- * NextAuth session cookie is host-only on `kitchenkin.app` and never
- * crosses the origin to `api.kitchenkin.app`). The `resolveCookieUser`
- * hook is therefore a no-op, but we keep `createUserResolver`'s shape
- * uniform with `apps/web` so the same code path resolves identity in
- * both contexts.
- */
-export const resolveUser = createUserResolver({
-  tokens,
-  webBearer,
-  resolveCookieUser: async () => null,
-});
+export async function resolveUser(request: Request) {
+  return resolveUserFromBetterAuthHeaders(request);
+}
