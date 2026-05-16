@@ -1,8 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useTransition } from "react";
+
+import { authClient } from "@/lib/auth/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,14 +18,14 @@ import { logout } from "@/lib/auth/server-actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function UserMenu() {
-  const { data: session, status } = useSession();
+  const { data: session, isPending } = authClient.useSession();
   const [isSigningOut, startTransition] = useTransition();
 
-  if (status === "loading") {
+  if (isPending) {
     return <Skeleton className="size-10 rounded-full" />;
   }
 
-  if (status === "unauthenticated") {
+  if (!session?.user) {
     return (
       <div className="flex gap-2">
         <Button variant="ghost" size="sm" asChild={true}>
@@ -37,10 +38,11 @@ export function UserMenu() {
     );
   }
 
-  const initials = session?.user?.name
-    ? session.user.name
+  const user = session.user;
+  const initials = user?.name
+    ? user.name
         .split(" ")
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join("")
         .toUpperCase()
     : "U";
@@ -50,20 +52,15 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild={true}>
         <Button variant="ghost" className="relative size-10 rounded-full">
           <Avatar className="size-10">
-            <AvatarImage
-              src={session?.user?.image || ""}
-              alt={session?.user?.name || "User"}
-            />
+            <AvatarImage src={user?.image ?? ""} alt={user?.name ?? "User"} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <div className="flex flex-col space-y-1 p-2">
-          <p className="text-sm font-medium">{session?.user?.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {session?.user?.email}
-          </p>
+          <p className="text-sm font-medium">{user?.name}</p>
+          <p className="text-xs text-muted-foreground">{user?.email}</p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild={true}>

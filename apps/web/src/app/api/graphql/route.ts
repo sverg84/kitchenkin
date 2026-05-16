@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { issueWebBearerPayloadOrNull } from "@/lib/auth/issue-web-bearer-from-session";
-
 function upstreamGraphqlUrl(): string | null {
   const raw =
     process.env.GRAPHQL_UPSTREAM_URL ??
@@ -14,14 +12,6 @@ function upstreamGraphqlUrl(): string | null {
     );
   }
   return null;
-}
-
-function requestMayHaveSessionCookie(request: Request): boolean {
-  const c = request.headers.get("cookie") ?? "";
-  return (
-    c.includes("authjs.session-token") ||
-    c.includes("__Secure-authjs.session-token")
-  );
 }
 
 function hopByHopHeader(name: string): boolean {
@@ -44,7 +34,11 @@ async function proxyToUpstream(request: Request): Promise<Response> {
   const upstream = upstreamGraphqlUrl();
   if (!upstream) {
     return NextResponse.json(
-      { errors: [{ message: "GraphQL proxy is not configured (GRAPHQL_UPSTREAM_URL)" }] },
+      {
+        errors: [
+          { message: "GraphQL proxy is not configured (GRAPHQL_UPSTREAM_URL)" },
+        ],
+      },
       { status: 503 },
     );
   }
@@ -52,21 +46,8 @@ async function proxyToUpstream(request: Request): Promise<Response> {
   const outHeaders = new Headers();
   request.headers.forEach((value, key) => {
     if (hopByHopHeader(key)) return;
-    const lower = key.toLowerCase();
-    if (lower === "cookie") return;
     outHeaders.set(key, value);
   });
-
-  let authz = request.headers.get("authorization");
-  if (!authz && requestMayHaveSessionCookie(request)) {
-    try {
-      const issued = await issueWebBearerPayloadOrNull();
-      if (issued) authz = `Bearer ${issued.accessToken}`;
-    } catch {
-      /* Public GraphQL may proceed without a bearer if issuance fails. */
-    }
-  }
-  if (authz) outHeaders.set("authorization", authz);
 
   const init: RequestInit = {
     method: request.method,

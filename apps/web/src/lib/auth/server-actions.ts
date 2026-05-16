@@ -1,16 +1,13 @@
 "use server";
 
-import { signIn, signOut } from "@/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-const redirectProps = {
-  redirect: true,
-  redirectTo: "/",
-};
-
-export async function login(provider: string, data?: Record<string, unknown>) {
-  await signIn(provider, { ...data, ...redirectProps });
-}
+import { auth as betterAuth } from "@kk/auth/next";
 
 export async function logout() {
-  await signOut(redirectProps);
+  await betterAuth.api.signOut({
+    headers: await headers(),
+  });
+  redirect("/");
 }

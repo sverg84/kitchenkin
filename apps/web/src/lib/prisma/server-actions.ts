@@ -1,7 +1,6 @@
 "use server";
 
 import { auth } from "@/auth";
-import { AuthError } from "next-auth";
 import type {
   CreateRecipeInput,
   UpdateRecipeInput,
@@ -32,7 +31,7 @@ async function authorizedInvariant(): Promise<string> {
   const session = await auth();
 
   if (!session?.user?.id) {
-    throw new AuthError("Unauthorized. Please log in.");
+    throw new Error("Unauthorized. Please log in.");
   }
 
   return session.user.id;

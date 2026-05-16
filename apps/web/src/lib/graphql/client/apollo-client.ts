@@ -1,48 +1,30 @@
 import { ApolloClient, InMemoryCache } from "@apollo/client-integration-nextjs";
 import { getCacheConfig, makeHttpLink } from "@kk/graphql/client";
 
-import {
-  getBrowserGraphqlExtraHeaders,
-  getServerGraphqlAuthHeaders,
-} from "../graphql-auth";
-import { graphqlUri, shouldUseBearerBridge } from "../graphql-remote";
+import { graphqlUri } from "../graphql-remote";
 
 /**
- * Web (Next-RSC-aware) Apollo Client factory. Composes the cache config
- * and HTTP link from `@kk/graphql` with the RSC-aware `ApolloClient` /
- * `InMemoryCache` from `@apollo/client-integration-nextjs`.
+ * Web Apollo client. Prefer same-origin GraphQL (`NEXT_PUBLIC_GRAPHQL_SAME_ORIGIN_PROXY=true`)
+ * so the Better Auth session cookie is forwarded via `/api/graphql` to `apps/api`.
  *
- * @param cookie - Forwarded `Cookie` header on the server (from
- *   `headers().get("cookie")`). Ignored in the browser.
- * @param appOrigin - Server only: actual public origin for this request
- *   (from `Host` / `x-forwarded-*`) so internal `fetch` to
- *   `/api/auth/web-bearer` hits the same port as the browser (e.g. 3001).
+ * On the server (`makeClient(cookie, origin)`), pass the inbound `Cookie` header so SSR
+ * requests are authenticated without browser `credentials`.
  */
 export function makeClient(
   cookie?: string | null,
   appOrigin?: string,
 ): ApolloClient {
   const uri = graphqlUri(appOrigin);
-  const useBridge = shouldUseBearerBridge(uri);
   const isServer = typeof window === "undefined";
 
   return new ApolloClient({
     cache: new InMemoryCache(getCacheConfig()),
     link: makeHttpLink({
       uri,
-      credentials: useBridge ? "omit" : "include",
-      headers:
-        useBridge && isServer
-          ? undefined
-          : !useBridge
-            ? { cookie: cookie ?? "" }
-            : undefined,
-      getHeaders:
-        useBridge && isServer
-          ? () => getServerGraphqlAuthHeaders(cookie ?? "", appOrigin)
-          : useBridge && !isServer
-            ? getBrowserGraphqlExtraHeaders
-            : undefined,
+      credentials: "include",
+      headers: isServer && cookie?.trim()
+        ? { cookie: cookie }
+        : {},
     }),
   });
 }

@@ -34,17 +34,3 @@ export function resolveWebAppOriginFromEnv(): string {
     return "http://localhost:3000";
   }
 }
-
-/**
- * When the GraphQL host differs from the web app origin, cookies do not
- * reach the API — use the web-bearer bridge + `Authorization` instead.
- */
-export function shouldUseBearerBridge(uri: string): boolean {
-  try {
-    const g = new URL(uri);
-    const a = new URL(resolveWebAppOriginFromEnv());
-    return g.origin !== a.origin;
-  } catch {
-    return false;
-  }
-}
