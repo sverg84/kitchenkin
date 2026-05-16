@@ -7,6 +7,10 @@ description: Ensure agents invoke the right KitchenKin skills based on the chang
 
 Use these KitchenKin repo skills **conditionally** based on what the user asks for and what files/surfaces are involved. Prefer invoking the most specific skill(s) rather than relying on generic inference.
 
+### Auth-aware changes (Better Auth)
+
+When work touches sign-in, session, cookies, or `apps/web/src/app/api/auth/**`, remember: **Better Auth** is mounted on **`apps/web`** at **`/api/auth/*`** (`packages/auth`): shared options in **`packages/auth/src/auth-options-core.ts`**, Node instance **`@kk/auth/server`** for **`apps/api`**, Next instance **`@kk/auth/next`** (adds `nextCookies()` last). The standalone **`apps/api`** GraphQL server resolves the user from the forwarded **`Cookie`** header (same-origin web proxy or Expo Apollo `Cookie` + **`expo-origin`**). Expo uses **`EXPO_PUBLIC_AUTH_ORIGIN`** and Better Auth **`expoClient`** with SecureStore.
+
 ### GraphQL-first contract/design work
 
 Invoke `.cursor/skills/backend-graphql-feature-design/SKILL.md` when work includes any of:
