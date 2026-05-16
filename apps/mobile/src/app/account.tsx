@@ -49,8 +49,8 @@ function SignedInPanel() {
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedText type="subtitle">You&apos;re signed in</ThemedText>
       <ThemedText type="small">
-        Your mobile session is active. Future authenticated queries will include
-        your bearer token automatically.
+        Your Better Auth session cookie is stored on device; GraphQL sends it
+        to the web app proxy.
       </ThemedText>
       <Pressable
         onPress={() => {
@@ -71,9 +71,8 @@ interface SignedOutPanelProps {
 }
 
 function SignedOutPanel({ status, error, onSignIn }: SignedOutPanelProps) {
-  const busy = status === "prompting" || status === "exchanging";
-  const disabled =
-    busy || status === "configuring" || status === "unconfigured";
+  const busy = status === "busy";
+  const disabled = busy || status === "unconfigured";
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
