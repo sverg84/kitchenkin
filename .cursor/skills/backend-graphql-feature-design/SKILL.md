@@ -18,7 +18,7 @@ Start by defining the GraphQL schema changes, including types, inputs, queries, 
   - Import registry: `packages/api/src/schema/index.ts` (side-effect imports + exports `builder`)
   - Package entry: `packages/api/src/index.ts` (`schema`, `GraphQLContext`, etc.)
 - **Prisma schema**: `packages/db/prisma/schema.prisma`
-- **Redis (web vs API)**: `apps/web/src/lib/redis.ts` and `apps/api/src/redis.ts` (use only for conceptual caching notes unless asked)
+- **Redis**: Better Auth uses `REDIS_URL` in `packages/auth/src/auth-options-core.ts`. GraphQL resolver caching is conceptual unless asked (no separate redis module).
 
 **Avoid new abstractions**: prefer extending the existing Pothos modules under `packages/api/src/schema/` and using Prisma directly in resolvers unless KK already has a service layer for that domain.
 

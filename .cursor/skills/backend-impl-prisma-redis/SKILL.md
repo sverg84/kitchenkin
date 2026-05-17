@@ -14,7 +14,7 @@ Focus on resolver implementation, Prisma query logic, and service-layer behavior
 - **GraphQL HTTP server**: `apps/api` (Bun + Hono + Apollo Server) — `/graphql`, `/auth/mobile/*`, CORS from `apps/api/src/cors.ts`.
 - **Pothos schema modules**: `packages/api/src/schema/*.ts` (registry: `packages/api/src/schema/index.ts`, builder: `builder.ts`).
 - **Prisma**: `packages/db` — schema `packages/db/prisma/schema.prisma`, client via `@kk/db` (avoid schema changes unless asked).
-- **Redis**: `apps/web/src/lib/redis.ts` (NextAuth / web bearer) and `apps/api/src/redis.ts` (API + tokens); align keys with existing patterns.
+- **Redis (auth)**: `packages/auth/src/auth-options-core.ts` — Better Auth `secondaryStorage` via `REDIS_URL`. For GraphQL resolver caching, add keys in the resolver/service layer; no shared redis helper yet.
 
 Prefer extending existing modules under `packages/api/src/schema/` for resolvers and keeping logic close to where similar KK code lives.
 

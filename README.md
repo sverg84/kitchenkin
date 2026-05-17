@@ -93,7 +93,7 @@ bun run zip:bundle        # esbuild single-file bundle + zip
 
 - **Auth:** **Better Auth** in **`packages/auth`**: **`@kk/auth/next`** (+ `nextCookies()` last) for Next; **`@kk/auth/server`** for **`apps/api`**. Sessions are persisted with Prisma (see migration **`20260516200000_better_auth`**). OAuth (Google initially): register redirect **`{webOrigin}/api/auth/callback/google`**.
 
-- **Cache:** Legacy Redis bearer flows were removed from local web/API bundles; Redis may still appear in other infra if reintroduced for caching elsewhere.
+- **Cache / sessions:** Better Auth in **`@kk/auth`** uses **`REDIS_URL`** for `secondaryStorage` (hybrid with Postgres `session` rows) and a short-lived session **cookie cache**. Set `REDIS_URL` on Vercel web and api (and in `apps/web/.env` / `apps/api/.env` locally).
 
 - **Image processing:** AWS Lambda (`@kitchenkin/lambda-image-upload`).
 - **Allergen detection:** AWS Lambda + Bedrock (`@kitchenkin/lambda-detect-allergens`).

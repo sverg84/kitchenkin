@@ -1,10 +1,15 @@
 import { expo } from "@better-auth/expo";
+import { redisStorage } from "@better-auth/redis-storage";
 import type { BetterAuthOptions } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import Redis from "ioredis";
 
 import { prisma } from "@kk/db";
 
 import { envStr, requireEnv } from "./auth-env";
+
+const redis = new Redis(requireEnv(["REDIS_URL"]), { lazyConnect: true });
+redis.on("error", (err) => console.warn("[redis]", err));
 
 /** Public origin for OAuth redirects and Expo `baseURL` must match Better Auth `baseURL`. */
 function appBaseURL(): string {
@@ -61,6 +66,17 @@ export const kitchenKinBetterAuthOptions = {
     accountLinking: {
       enabled: true,
       trustedProviders: ["google"],
+    },
+  },
+  secondaryStorage: redisStorage({
+    client: redis,
+    keyPrefix: "kk-auth:",
+  }),
+  session: {
+    storeSessionInDatabase: true,
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
     },
   },
   plugins: [expo()],
