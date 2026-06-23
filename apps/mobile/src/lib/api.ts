@@ -1,54 +1,18 @@
-import Constants from "expo-constants";
-import { Platform } from "react-native";
-
 /**
- * Resolve the backend's HTTP base URL (no trailing slash). Both the
- * GraphQL endpoint and the mobile auth endpoints share this host —
- * which is the standalone `apps/api` server (Bun + Hono), not the
- * web app.
- *
- * Priority:
- *   1. `EXPO_PUBLIC_API_BASE` env (e.g. https://api.kitchenkin.app).
- *   2. `EXPO_PUBLIC_GRAPHQL_URI`'s origin, for back-compat with the
- *      earlier mobile-only env.
- *   3. Expo dev host (Metro packager's IP) on a physical device or
- *      Android emulator, so the device can reach the dev machine on
- *      port 4000.
- *   4. `http://localhost:4000` for iOS simulator and web.
+ * Resolve the KitchenKin REST API base URL (includes `/api`, no trailing slash).
  */
 export function resolveApiBase(): string {
-  const explicitBase = process.env.EXPO_PUBLIC_API_BASE;
-  if (explicitBase) return stripTrailingSlash(explicitBase);
-
-  const explicitGraphql = process.env.EXPO_PUBLIC_GRAPHQL_URI;
-  if (explicitGraphql) {
-    try {
-      const url = new URL(explicitGraphql);
-      return `${url.protocol}//${url.host}`;
-    } catch {
-      // fall through
-    }
+  const authOrigin = process.env.EXPO_PUBLIC_AUTH_ORIGIN?.trim().replace(
+    /\/$/,
+    "",
+  );
+  if (authOrigin) {
+    return `${authOrigin}/api`;
   }
-
-  const hostUri =
-    Constants.expoConfig?.hostUri ??
-    Constants.expoGoConfig?.debuggerHost ??
-    null;
-
-  if (hostUri && Platform.OS !== "web") {
-    const host = hostUri.split(":")[0];
-    if (host && host !== "127.0.0.1" && host !== "localhost") {
-      return `http://${host}:4000`;
-    }
-  }
-
-  return "http://localhost:4000";
+  return "http://127.0.0.1:3000/api";
 }
 
 export function apiUrl(path: string): string {
-  return `${resolveApiBase()}${path.startsWith("/") ? path : `/${path}`}`;
-}
-
-function stripTrailingSlash(s: string): string {
-  return s.endsWith("/") ? s.slice(0, -1) : s;
+  const base = resolveApiBase();
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }

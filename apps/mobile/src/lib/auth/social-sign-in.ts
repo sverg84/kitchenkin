@@ -2,29 +2,30 @@ import { useEffect, useState } from "react";
 
 import { authClient } from "./auth-client";
 
-export type GoogleSignInStatus =
-  | "idle"
-  | "unconfigured"
-  | "busy"
-  | "error";
+export type SocialProvider = "google" | "reddit";
 
-export interface UseGoogleSignInResult {
-  status: GoogleSignInStatus;
+export type SocialSignInStatus = "idle" | "unconfigured" | "busy" | "error";
+
+export interface UseSocialSignInResult {
+  status: SocialSignInStatus;
   error: string | null;
   signIn: () => Promise<void>;
 }
 
+const UNCONFIGURED_MSG =
+  "Set EXPO_PUBLIC_AUTH_ORIGIN to your Next.js origin.";
+
 /**
- * Starts Better Auth Google OAuth (`apps/web` as auth backend via Expo plugin).
+ * Starts Better Auth OAuth via the Next app (`EXPO_PUBLIC_AUTH_ORIGIN` + expo plugin).
  */
-export function useGoogleSignIn(): UseGoogleSignInResult {
+export function useSocialSignIn(provider: SocialProvider): UseSocialSignInResult {
   const configured = Boolean(process.env.EXPO_PUBLIC_AUTH_ORIGIN?.trim());
 
-  const [status, setStatus] = useState<GoogleSignInStatus>(
+  const [status, setStatus] = useState<SocialSignInStatus>(
     configured ? "idle" : "unconfigured",
   );
   const [error, setError] = useState<string | null>(
-    configured ? null : "Set EXPO_PUBLIC_AUTH_ORIGIN to your Next.js origin.",
+    configured ? null : UNCONFIGURED_MSG,
   );
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export function useGoogleSignIn(): UseGoogleSignInResult {
     setStatus("busy");
     try {
       const result = await authClient.signIn.social({
-        provider: "google",
+        provider,
         callbackURL: "/",
       });
       const errMsg = result.error?.message;
