@@ -8,8 +8,6 @@ import {
 import RecipeList from "../recipe/list/recipe-list";
 
 export default function ProfileFavorites() {
-  const variables = { first: 24 };
-
   return (
     <Card>
       <CardHeader>
@@ -19,8 +17,7 @@ export default function ProfileFavorites() {
         </CardDescription>
       </CardHeader>
       <RecipeList
-        query="favorites"
-        variables={variables}
+        variant="favorites"
         emptyState={
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-center text-muted-foreground">

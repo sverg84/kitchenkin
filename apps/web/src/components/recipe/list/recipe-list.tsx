@@ -1,105 +1,102 @@
 "use client";
 
-import type { OperationVariables } from "@apollo/client";
-import { useQuery, useReadQuery } from "@apollo/client/react";
-import type { TransportedQueryRef } from "@apollo/client-integration-nextjs";
-import type { DocumentNode } from "graphql";
+import Link from "next/link";
+import { useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import type { RecipeDTO } from "@kk/shared";
+
 import {
-  RECIPES_QUERY,
-  RECIPES_FOR_USER_QUERY,
-  FAVORITE_RECIPES_QUERY,
-  type FavoriteRecipesQuery,
-  type FavoriteRecipesQueryVariables,
-  type GetRecipesQuery,
-  type GetRecipesQueryVariables,
-  type RecipesForUserQueryQuery,
-  type RecipesForUserQueryQueryVariables,
-} from "@kk/graphql";
-import InfiniteScrollList from "./infinite-scroll";
+  useFavoriteRecipes,
+  useMyRecipes,
+  useRecipes,
+} from "@/lib/query/hooks/use-recipes";
+import { RecipeCard } from "./recipe-card";
+import RecipeSkeletonList from "./recipe-skeleton-list";
 
-const QUERIES = {
-  recipes: RECIPES_QUERY,
-  myRecipes: RECIPES_FOR_USER_QUERY,
-  favorites: FAVORITE_RECIPES_QUERY,
-};
+type RecipeListVariant = "recipes" | "myRecipes" | "favorites";
 
-type RecipeConnectionQuery =
-  | GetRecipesQuery
-  | FavoriteRecipesQuery
-  | RecipesForUserQueryQuery;
-type RecipeConnectionQueryVariables =
-  | GetRecipesQueryVariables
-  | FavoriteRecipesQueryVariables
-  | RecipesForUserQueryQueryVariables;
-
-interface RecipeListCommonProps {
-  query: keyof typeof QUERIES;
-  variables?: OperationVariables;
+interface RecipeListProps {
+  variant: RecipeListVariant;
   emptyState?: React.ReactElement;
 }
 
-interface RecipeListPreloadedProps extends RecipeListCommonProps {
-  queryRef: TransportedQueryRef<
-    RecipeConnectionQuery,
-    RecipeConnectionQueryVariables
-  >;
-}
-
-interface RecipeListLiveProps extends RecipeListCommonProps {
-  queryRef?: undefined;
-}
-
-function PreloadedRecipeList({
-  query,
-  variables,
-  emptyState,
-  queryRef,
-}: Readonly<RecipeListPreloadedProps>) {
-  const { data } = useReadQuery(queryRef);
-  const recipes = data?.recipes;
-
-  if (!recipes?.exists) {
-    return emptyState;
-  }
-
+function RecipeLink({ recipe }: { recipe: RecipeDTO }) {
   return (
-    <InfiniteScrollList
-      query={QUERIES[query]}
-      variables={variables}
-      connection={recipes}
-    />
+    <Link href={`/recipe/${recipe.id}`}>
+      <RecipeCard recipe={recipe} />
+    </Link>
   );
 }
 
-function LiveRecipeList({
-  query,
-  variables,
-  emptyState,
-}: Readonly<RecipeListLiveProps>) {
-  const effectiveVariables = variables ?? { first: 24 };
-  const { data } = useQuery(QUERIES[query] as DocumentNode, {
-    variables: effectiveVariables,
-  });
-  const recipes = (data as RecipeConnectionQuery | undefined)?.recipes;
+function useRecipeQuery(variant: RecipeListVariant, search: string | null) {
+  const recipesQuery = useRecipes(search);
+  const myRecipesQuery = useMyRecipes();
+  const favoritesQuery = useFavoriteRecipes();
 
-  if (!recipes?.exists) {
-    return emptyState;
+  if (variant === "myRecipes") return myRecipesQuery;
+  if (variant === "favorites") return favoritesQuery;
+  return recipesQuery;
+}
+
+export default function RecipeList({
+  variant,
+  emptyState,
+}: Readonly<RecipeListProps>) {
+  const searchParams = useSearchParams();
+  const search = variant === "recipes" ? searchParams.get("search") : null;
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useRecipeQuery(variant, search);
+
+  const recipes =
+    data?.pages.flatMap((page) => page.edges.map((edge) => edge.node)) ?? [];
+  const exists = data?.pages[0]?.exists ?? false;
+
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+
+    const element = loadMoreRef.current;
+    if (element) observer.observe(element);
+
+    return () => {
+      if (element) observer.unobserve(element);
+      observer.disconnect();
+    };
+  }, [hasNextPage, isFetchingNextPage, loadMore]);
+
+  if (isLoading) {
+    return <RecipeSkeletonList />;
+  }
+
+  if (!exists) {
+    return emptyState ?? null;
   }
 
   return (
-    <InfiniteScrollList
-      query={QUERIES[query]}
-      variables={effectiveVariables}
-      connection={recipes}
-    />
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {recipes.map((recipe) => (
+          <RecipeLink key={recipe.id} recipe={recipe} />
+        ))}
+      </div>
+      {isFetchingNextPage && <RecipeSkeletonList className="mt-6" />}
+      <div ref={loadMoreRef} className="h-10" />
+    </>
   );
-}
-
-export type RecipeListProps = RecipeListPreloadedProps | RecipeListLiveProps;
-
-export default function RecipeList(props: Readonly<RecipeListProps>) {
-  if ("queryRef" in props && props.queryRef) {
-    return <PreloadedRecipeList {...props} />;
-  }
-  return <LiveRecipeList {...props} />;
 }

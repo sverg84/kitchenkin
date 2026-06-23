@@ -28,11 +28,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { startTransition, useRef, useActionState, useState } from "react";
 import { createRecipe, updateRecipe } from "@/lib/prisma/server-actions";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  type GetRecipeQuery,
-  useFragment as getFragmentData,
-  RecipeFragment,
-} from "@kk/graphql";
+import type { RecipeDTO } from "@kk/shared";
 import { recipeFormSchema, type RecipeFormData } from "@kk/shared";
 
 const unitItems = {
@@ -54,8 +50,8 @@ const unitItems = {
 } as const;
 
 interface RecipeFormProps {
-  categories: Array<{ rawId: string; name: string }>;
-  initialRecipe: NonNullable<GetRecipeQuery["recipe"]> | undefined;
+  categories: Array<{ id: string; name: string }>;
+  initialRecipe: RecipeDTO | undefined;
   type: "create" | "update";
 }
 
@@ -64,7 +60,6 @@ export function RecipeForm({
   initialRecipe,
   type,
 }: RecipeFormProps) {
-  const initialRecipeDetails = getFragmentData(RecipeFragment, initialRecipe);
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
@@ -79,13 +74,13 @@ export function RecipeForm({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
       type,
-      ...(type === "update" ? { id: initialRecipeDetails?.rawId } : null),
+      ...(type === "update" ? { id: initialRecipe?.id } : null),
       image: undefined,
-      categoryId: initialRecipeDetails?.category?.rawId ?? "",
-      title: initialRecipeDetails?.title || "",
-      description: initialRecipeDetails?.description || "",
-      prepTime: initialRecipeDetails?.prepTime || "",
-      cookTime: initialRecipeDetails?.cookTime || "",
+      categoryId: initialRecipe?.category.id ?? "",
+      title: initialRecipe?.title || "",
+      description: initialRecipe?.description || "",
+      prepTime: initialRecipe?.prepTime || "",
+      cookTime: initialRecipe?.cookTime || "",
       servings: initialRecipe?.servings || 0,
       instructions: initialRecipe?.instructions || [""],
       ingredients: initialRecipe?.ingredients
@@ -218,7 +213,7 @@ export function RecipeForm({
     const values: ValuesWithImageData = { ...restValues };
 
     if (type === "update") {
-      values.id = initialRecipeDetails!.rawId;
+      values.id = initialRecipe!.id;
     }
 
     if (values.image) {
@@ -388,8 +383,8 @@ export function RecipeForm({
                         <SelectContent>
                           {categories.map((category) => (
                             <SelectItem
-                              key={category.rawId}
-                              value={category.rawId}
+                              key={category.id}
+                              value={category.id}
                             >
                               {category.name}
                             </SelectItem>

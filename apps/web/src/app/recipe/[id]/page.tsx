@@ -3,12 +3,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { getRecipe } from "@/lib/graphql/server-fetch";
+import { getRecipeById } from "@kk/domain";
 import { notFound } from "next/navigation";
 import { RecipeImage } from "@/components/recipe/recipe-image";
 import { auth } from "@/auth";
 import { Allergen } from "@kk/db";
-import { useFragment as getFragmentData, RecipeFragment } from "@kk/graphql";
 import {
   Dialog,
   DialogContent,
@@ -39,12 +38,11 @@ async function RecipePageContent({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [recipe, session] = await Promise.all([getRecipe(id), auth()]);
+  const [recipe, session] = await Promise.all([getRecipeById(id), auth()]);
 
   if (!recipe) {
     notFound();
   }
-  const recipeDetails = getFragmentData(RecipeFragment, recipe);
 
   return (
     <main className="mx-auto px-4 py-8 max-w-7xl">
@@ -57,11 +55,11 @@ async function RecipePageContent({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="flex flex-col gap-y-8">
           <div className="relative aspect-video rounded-lg overflow-hidden">
-            <RecipeImage recipe={recipeDetails} priority={true} />
+            <RecipeImage recipe={recipe} priority={true} />
           </div>
-          {session?.user?.id === recipe.author?.rawId && (
+          {session?.user?.id === recipe.author.id && (
             <div className="self-center flex gap-x-2">
-              <Link href={`/recipe/${recipeDetails.rawId}/edit`}>
+              <Link href={`/recipe/${recipe.id}/edit`}>
                 <Button variant="secondary">
                   <label>Edit</label>
                   <Edit />
@@ -79,7 +77,7 @@ async function RecipePageContent({
                   </DialogHeader>
                   This cannot be undone.
                   <DialogFooter>
-                    <RecipeDeleteDialogButtons recipeId={recipeDetails.rawId} />
+                    <RecipeDeleteDialogButtons recipeId={recipe.id} />
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -87,27 +85,25 @@ async function RecipePageContent({
           )}
         </div>
         <div>
-          <h1 className="text-3xl font-bold">{recipeDetails.title}</h1>
+          <h1 className="text-3xl font-bold">{recipe.title}</h1>
           <p className="mb-2">
-            {recipe.author?.name ? `by ${recipe.author.name}` : ""}
+            {recipe.author.name ? `by ${recipe.author.name}` : ""}
           </p>
-          <p className="text-muted-foreground mb-4">
-            {recipeDetails.description}
-          </p>
+          <p className="text-muted-foreground mb-4">{recipe.description}</p>
           <div className="flex flex-wrap gap-2 mb-4 items-center">
-            <Badge>{recipeDetails.category?.name}</Badge>
+            <Badge>{recipe.category.name}</Badge>
             <div className="flex items-center">
               <Clock className="size-4 mr-1" />
-              <span className="text-sm">Prep: {recipeDetails.prepTime}</span>
+              <span className="text-sm">Prep: {recipe.prepTime}</span>
             </div>
             <div className="flex items-center">
               <Clock className="size-4 mr-1" />
-              <span className="text-sm">Cook: {recipeDetails.cookTime}</span>
+              <span className="text-sm">Cook: {recipe.cookTime}</span>
             </div>
             <div className="text-sm">Servings: {recipe.servings}</div>
           </div>
           <ul className="flex flex-wrap gap-2 mb-4 items-center">
-            {recipe.allergens?.map((allergen) => (
+            {recipe.allergens.map((allergen) => (
               <li className="flex" key={allergen}>
                 <Badge variant="secondary">
                   {allergen === Allergen.TreeNuts ? "Tree Nuts" : allergen}
@@ -119,7 +115,7 @@ async function RecipePageContent({
           <div>
             <h2 className="text-xl font-semibold mb-4">Ingredients</h2>
             <ul className="list-disc pl-5 space-y-2 mb-6">
-              {recipe.ingredients?.map((ingredient) => (
+              {recipe.ingredients.map((ingredient) => (
                 <li key={ingredient.id}>
                   {ingredient.amount} {ingredient.unit} {ingredient.name}
                 </li>
@@ -127,7 +123,7 @@ async function RecipePageContent({
             </ul>
             <h2 className="text-xl font-semibold mb-4">Instructions</h2>
             <ol className="list-decimal pl-5 space-y-4">
-              {recipe.instructions?.map((step, index) => (
+              {recipe.instructions.map((step, index) => (
                 <li key={index}>{step}</li>
               ))}
             </ol>

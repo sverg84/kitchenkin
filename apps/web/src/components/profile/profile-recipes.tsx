@@ -5,8 +5,6 @@ import Link from "next/link";
 import RecipeList from "../recipe/list/recipe-list";
 
 export default function ProfileRecipes() {
-  const variables = { first: 24 };
-
   return (
     <>
       <div className="flex items-center justify-between">
@@ -20,8 +18,7 @@ export default function ProfileRecipes() {
       </div>
 
       <RecipeList
-        query="myRecipes"
-        variables={variables}
+        variant="myRecipes"
         emptyState={
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getCategories } from "@/lib/graphql/server-fetch";
+import { listCategories } from "@kk/domain";
 import { RecipeFormWrapper } from "@/components/recipe/form/recipe-form-wrapper";
 import { Suspense } from "react";
 import { RecipeFormFallback } from "@/components/suspense-fallbacks/recipe-form-fallback";
@@ -20,7 +20,8 @@ async function NewRecipePageContent() {
     redirect("/login");
   }
 
-  const categories = await getCategories();
+  const connection = await listCategories({ first: 100 });
+  const categories = connection.edges.map((edge) => edge.node);
 
   return <RecipeFormWrapper categories={categories} formMode="create" />;
 }

@@ -6,11 +6,14 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
+import type { RecipeDTO } from "@kk/shared";
 import { RecipeImage } from "../recipe-image";
-import type { Recipe } from "@kk/graphql";
 
 interface RecipeCardProps {
-  recipe: Recipe;
+  recipe: Pick<
+    RecipeDTO,
+    "id" | "title" | "description" | "prepTime" | "cookTime" | "category" | "image"
+  >;
 }
 
 export function RecipeCard({ recipe }: RecipeCardProps) {
@@ -22,7 +25,7 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
       <CardHeader>
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">{recipe.title}</h3>
-          <Badge>{recipe.category?.name}</Badge>
+          <Badge>{recipe.category.name}</Badge>
         </div>
       </CardHeader>
       <CardContent>
