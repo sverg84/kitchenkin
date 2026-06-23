@@ -46,6 +46,7 @@ yarn-error.log*
 # prisma & pothos generated outputs
 packages/db/src/generated/
 packages/domain/src/generated/
+apps/web/src/lib/generated/
 
 # local db handling only
 **/seed.mjs
