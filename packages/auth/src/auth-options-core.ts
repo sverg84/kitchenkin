@@ -46,7 +46,7 @@ function trustedOrigins(): string[] {
 
 /**
  * Shared Better Auth configuration (plugins **excluding** Next-only {@link nextCookies}).
- * Imported by `./server.ts` (`apps/api`) and merged in `./next.ts` (`apps/web`).
+ * Imported by `./server.ts` and merged in `./next.ts` (`apps/web`).
  */
 export const kitchenKinBetterAuthOptions = {
   appName: "KitchenKin",
@@ -61,11 +61,15 @@ export const kitchenKinBetterAuthOptions = {
       clientId: requireEnv(["AUTH_GOOGLE_ID"]),
       clientSecret: requireEnv(["AUTH_GOOGLE_SECRET"]),
     },
+    reddit: {
+      clientId: requireEnv(["AUTH_REDDIT_ID"]),
+      clientSecret: requireEnv(["AUTH_REDDIT_SECRET"]),
+    },
   },
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google"],
+      trustedProviders: ["google", "reddit"],
     },
   },
   secondaryStorage: redisStorage({
