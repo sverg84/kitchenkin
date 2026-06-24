@@ -4,6 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { signOutAndClearQueries } from "@kk/shared";
+
 import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
 import { authClient } from "@/lib/auth/auth-client";
 import {
@@ -53,8 +55,7 @@ function SignedInPanel({
   const displayName = user?.name ?? user?.email;
 
   async function handleSignOut() {
-    await authClient.signOut();
-    queryClient.clear();
+    await signOutAndClearQueries(authClient, queryClient);
   }
 
   return (

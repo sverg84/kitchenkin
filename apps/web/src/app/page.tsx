@@ -1,5 +1,5 @@
 import { SearchBar } from "@/components/search-bar";
-import RecipeList from "@/components/recipe/list/recipe-list";
+import PublicRecipeList from "@/components/recipe/list/public-recipe-list";
 import { Suspense } from "react";
 import RecipeSkeletonList from "@/components/recipe/list/recipe-skeleton-list";
 
@@ -11,7 +11,7 @@ export default function Home() {
         <SearchBar className="mb-8" />
       </Suspense>
       <Suspense fallback={<RecipeSkeletonList />}>
-        <RecipeList variant="recipes" />
+        <PublicRecipeList />
       </Suspense>
     </main>
   );
