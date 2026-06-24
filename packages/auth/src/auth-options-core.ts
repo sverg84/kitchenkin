@@ -7,8 +7,14 @@ import Redis from "ioredis";
 import { prisma } from "@kk/db";
 
 import { envStr, requireEnv } from "./auth-env";
+import { resilientSecondaryStorage } from "./resilient-secondary-storage";
 
-const redis = new Redis(requireEnv(["REDIS_URL"]), { lazyConnect: true });
+const redis = new Redis(requireEnv(["REDIS_URL"]), {
+  lazyConnect: true,
+  enableOfflineQueue: false,
+  maxRetriesPerRequest: 1,
+  connectTimeout: 3_000,
+});
 redis.on("error", (err) => console.warn("[redis]", err));
 
 /** Public origin for OAuth redirects and Expo `baseURL` must match Better Auth `baseURL`. */
@@ -72,10 +78,15 @@ export const kitchenKinBetterAuthOptions = {
       trustedProviders: ["google", "reddit"],
     },
   },
-  secondaryStorage: redisStorage({
-    client: redis,
-    keyPrefix: "kk-auth:",
-  }),
+  secondaryStorage: resilientSecondaryStorage(
+    redisStorage({
+      client: redis,
+      keyPrefix: "kk-auth:",
+    }),
+  ),
+  verification: {
+    storeInDatabase: true,
+  },
   session: {
     storeSessionInDatabase: true,
     cookieCache: {

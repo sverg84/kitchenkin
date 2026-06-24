@@ -2,23 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
-import type { RecipeDTO } from "@kk/shared";
+import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query";
+import type { RecipeConnection, RecipeDTO } from "@kk/shared";
 
-import {
-  useFavoriteRecipes,
-  useMyRecipes,
-  useRecipes,
-} from "@/lib/query/hooks/use-recipes";
-import { RecipeCard } from "./recipe-card";
 import RecipeSkeletonList from "./recipe-skeleton-list";
-
-type RecipeListVariant = "recipes" | "myRecipes" | "favorites";
-
-interface RecipeListProps {
-  variant: RecipeListVariant;
-  emptyState?: React.ReactElement;
-}
+import { RecipeCard } from "./recipe-card";
 
 function RecipeLink({ recipe }: { recipe: RecipeDTO }) {
   return (
@@ -28,26 +16,24 @@ function RecipeLink({ recipe }: { recipe: RecipeDTO }) {
   );
 }
 
-function useRecipeQuery(variant: RecipeListVariant, search: string | null) {
-  const recipesQuery = useRecipes(search);
-  const myRecipesQuery = useMyRecipes();
-  const favoritesQuery = useFavoriteRecipes();
+type RecipeInfiniteQueryResult = Pick<
+  UseInfiniteQueryResult<InfiniteData<RecipeConnection>>,
+  "data" | "fetchNextPage" | "hasNextPage" | "isFetchingNextPage" | "isLoading"
+>;
 
-  if (variant === "myRecipes") return myRecipesQuery;
-  if (variant === "favorites") return favoritesQuery;
-  return recipesQuery;
+interface RecipeListShellProps extends RecipeInfiniteQueryResult {
+  emptyState?: React.ReactElement;
 }
 
-export default function RecipeList({
-  variant,
+export function RecipeListShell({
+  data,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  isLoading,
   emptyState,
-}: Readonly<RecipeListProps>) {
-  const searchParams = useSearchParams();
-  const search = variant === "recipes" ? searchParams.get("search") : null;
+}: Readonly<RecipeListShellProps>) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useRecipeQuery(variant, search);
 
   const recipes =
     data?.pages.flatMap((page) => page.edges.map((edge) => edge.node)) ?? [];

@@ -169,10 +169,10 @@ export function UserProfile({ activeTab, user }: Readonly<UserProfileProps>) {
           />
         </MotionTabsList>
         <TabsContent value="recipes" className="space-y-4">
-          <ProfileRecipes />
+          {tab === "recipes" && <ProfileRecipes />}
         </TabsContent>
         <TabsContent value="favorites" className="space-y-4">
-          <ProfileFavorites />
+          {tab === "favorites" && <ProfileFavorites />}
         </TabsContent>
       </Tabs>
     </div>
