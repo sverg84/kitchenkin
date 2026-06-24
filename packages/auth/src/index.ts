@@ -1,5 +1,1 @@
-export {
-  auth,
-  resolveUserFromBetterAuthHeaders,
-  type ResolvedGraphqlUser,
-} from "./server";
+export { auth } from "./server";

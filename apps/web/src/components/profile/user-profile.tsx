@@ -5,8 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UserProfileTabType } from "@/lib/auth/types";
-import { useApolloClient } from "@apollo/client/react";
-import { RECIPES_FOR_USER_QUERY, FAVORITE_RECIPES_QUERY } from "@kk/graphql";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys, type RecipeConnection, webApiClient } from "@kk/shared";
 import ProfileFavorites from "./profile-favorites";
 import ProfileRecipes from "./profile-recipes";
 
@@ -24,11 +24,10 @@ const MotionTabsList = motion.create(TabsList);
 const MotionTabsTrigger = motion.create(TabsTrigger);
 
 export function UserProfile({ activeTab, user }: Readonly<UserProfileProps>) {
-  // Refs
   const tabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const tabsListRef = useRef<HTMLDivElement | null>(null);
+  const queryClient = useQueryClient();
 
-  // States
   const [tabStyles, setTabStyles] = useState({
     x: 0,
     width: 0,
@@ -36,7 +35,6 @@ export function UserProfile({ activeTab, user }: Readonly<UserProfileProps>) {
   });
   const [tab, setTab] = useState<UserProfileTabType>(activeTab);
 
-  // Side Effects
   useEffect(() => {
     const updateTabStyles = () => {
       const activeTabElement = tabRefs.current[tab];
@@ -49,17 +47,15 @@ export function UserProfile({ activeTab, user }: Readonly<UserProfileProps>) {
       }
     };
 
-    // Initial tab style update
     updateTabStyles();
 
-    // Set up ResizeObserver to handle resizing
     const resizeObserver = new ResizeObserver(updateTabStyles);
     if (tabsListRef.current) {
-      resizeObserver.observe(tabsListRef.current); // Watch the Tabs.List for size changes
+      resizeObserver.observe(tabsListRef.current);
     }
 
     return () => {
-      resizeObserver.disconnect(); // Clean up observer on unmount
+      resizeObserver.disconnect();
     };
   }, [tab]);
 
@@ -74,26 +70,32 @@ export function UserProfile({ activeTab, user }: Readonly<UserProfileProps>) {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const client = useApolloClient();
-
-  // Memoized Functions
   const onMouseEnter = useCallback(
-    async (tab: UserProfileTabType) => {
-      if (tab === "recipes") {
-        await client.query({
-          query: RECIPES_FOR_USER_QUERY,
-          variables: { first: 24 },
-          fetchPolicy: "cache-first",
-        });
-      } else {
-        await client.query({
-          query: FAVORITE_RECIPES_QUERY,
-          variables: { first: 24 },
-          fetchPolicy: "cache-first",
-        });
-      }
+    (hoveredTab: UserProfileTabType) => {
+      const queryKey =
+        hoveredTab === "recipes"
+          ? queryKeys.recipes.mine()
+          : queryKeys.recipes.favorites();
+      const path =
+        hoveredTab === "recipes" ? "/api/recipes/mine" : "/api/recipes/favorites";
+
+      void queryClient.prefetchInfiniteQuery({
+        queryKey,
+        initialPageParam: null as string | null,
+        queryFn: async ({ pageParam }) =>
+          webApiClient.get<RecipeConnection>(path, {
+            searchParams: {
+              first: 24,
+              after: pageParam ?? undefined,
+            },
+          }),
+        getNextPageParam: (lastPage: RecipeConnection) =>
+          lastPage.pageInfo.hasNextPage
+            ? lastPage.pageInfo.endCursor
+            : undefined,
+      });
     },
-    [client],
+    [queryClient],
   );
 
   const onValueChange = useCallback((value: string) => {
@@ -167,10 +169,10 @@ export function UserProfile({ activeTab, user }: Readonly<UserProfileProps>) {
           />
         </MotionTabsList>
         <TabsContent value="recipes" className="space-y-4">
-          <ProfileRecipes />
+          {tab === "recipes" && <ProfileRecipes />}
         </TabsContent>
         <TabsContent value="favorites" className="space-y-4">
-          <ProfileFavorites />
+          {tab === "favorites" && <ProfileFavorites />}
         </TabsContent>
       </Tabs>
     </div>

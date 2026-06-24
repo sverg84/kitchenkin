@@ -1,14 +1,15 @@
 "use client";
 
-import type { TransitionStartFunction } from "react";
-import { FaGoogle } from "react-icons/fa6";
+import { useState, type TransitionStartFunction } from "react";
+import { FaGoogle, FaReddit } from "react-icons/fa6";
 
 import { authClient } from "@/lib/auth/auth-client";
 
 import OAuthButton from "./oauth-button";
 
+type SocialProvider = "google" | "reddit";
+
 type Props = Readonly<{
-  /** @deprecated parity with old layout — Google-only OAuth for now */
   action: "login" | "register";
   isLoading: boolean;
   startTransition: TransitionStartFunction;
@@ -20,26 +21,47 @@ export default function OAuthSection({
   startTransition,
 }: Props) {
   const actionText = action === "register" ? "Sign up" : "Sign in";
+  const [error, setError] = useState<string | null>(null);
 
-  async function signInGoogle() {
-    const { error } = await authClient.signIn.social({
-      provider: "google",
+  async function signInWith(provider: SocialProvider) {
+    setError(null);
+    const { error: authError } = await authClient.signIn.social({
+      provider,
       callbackURL: "/",
     });
-    if (error) throw new Error(error.message ?? `${actionText} failed`);
+    if (authError) {
+      setError(authError.message ?? `${actionText} failed`);
+    }
+  }
+
+  function handleSocial(provider: SocialProvider) {
+    startTransition(async () => {
+      try {
+        await signInWith(provider);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : `${actionText} failed`);
+      }
+    });
   }
 
   return (
     <div className="flex flex-col gap-y-4 mb-6">
+      {error ? (
+        <p className="text-sm text-destructive text-center" role="alert">
+          {error}
+        </p>
+      ) : null}
       <OAuthButton
         disabled={isLoading}
         label={`${actionText} with Google`}
         Icon={FaGoogle}
-        onClick={() => {
-          startTransition(async () => {
-            await signInGoogle();
-          });
-        }}
+        onClick={() => handleSocial("google")}
+      />
+      <OAuthButton
+        disabled={isLoading}
+        label={`${actionText} with Reddit`}
+        Icon={FaReddit}
+        onClick={() => handleSocial("reddit")}
       />
     </div>
   );

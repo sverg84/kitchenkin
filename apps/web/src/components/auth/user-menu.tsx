@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+
+import { signOutAndClearQueries } from "@kk/shared";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { authClient } from "@/lib/auth/auth-client";
 import { Button } from "@/components/ui/button";
@@ -14,10 +18,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Plus } from "lucide-react";
-import { logout } from "@/lib/auth/server-actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function UserMenu() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: session, isPending } = authClient.useSession();
   const [isSigningOut, startTransition] = useTransition();
 
@@ -87,7 +92,11 @@ export function UserMenu() {
           disabled={isSigningOut}
           onClick={() =>
             startTransition(async () => {
-              await logout();
+              await signOutAndClearQueries(authClient, queryClient, {
+                onSuccess: () => {
+                  router.push("/");
+                },
+              });
             })
           }
         >

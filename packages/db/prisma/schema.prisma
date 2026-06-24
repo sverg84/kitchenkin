@@ -126,9 +126,3 @@ model Verification {
 
   @@index([identifier])
 }
-
-generator pothos {
-  provider     = "prisma-pothos-types"
-  clientOutput = "@kk/db"
-  output       = "../../api/src/generated/pothos-prisma.ts"
-}

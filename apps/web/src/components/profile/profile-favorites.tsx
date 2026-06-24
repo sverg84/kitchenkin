@@ -5,11 +5,9 @@ import {
   CardDescription,
   CardContent,
 } from "../ui/card";
-import RecipeList from "../recipe/list/recipe-list";
+import FavoritesRecipeList from "../recipe/list/favorites-recipe-list";
 
 export default function ProfileFavorites() {
-  const variables = { first: 24 };
-
   return (
     <Card>
       <CardHeader>
@@ -18,9 +16,7 @@ export default function ProfileFavorites() {
           Recipes you&apos;ve saved as favorites will appear here.
         </CardDescription>
       </CardHeader>
-      <RecipeList
-        query="favorites"
-        variables={variables}
+      <FavoritesRecipeList
         emptyState={
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-center text-muted-foreground">

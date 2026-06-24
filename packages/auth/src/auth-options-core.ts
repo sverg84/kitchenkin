@@ -7,8 +7,14 @@ import Redis from "ioredis";
 import { prisma } from "@kk/db";
 
 import { envStr, requireEnv } from "./auth-env";
+import { resilientSecondaryStorage } from "./resilient-secondary-storage";
 
-const redis = new Redis(requireEnv(["REDIS_URL"]), { lazyConnect: true });
+const redis = new Redis(requireEnv(["REDIS_URL"]), {
+  lazyConnect: true,
+  enableOfflineQueue: false,
+  maxRetriesPerRequest: 1,
+  connectTimeout: 3_000,
+});
 redis.on("error", (err) => console.warn("[redis]", err));
 
 /** Public origin for OAuth redirects and Expo `baseURL` must match Better Auth `baseURL`. */
@@ -46,7 +52,7 @@ function trustedOrigins(): string[] {
 
 /**
  * Shared Better Auth configuration (plugins **excluding** Next-only {@link nextCookies}).
- * Imported by `./server.ts` (`apps/api`) and merged in `./next.ts` (`apps/web`).
+ * Imported by `./server.ts` and merged in `./next.ts` (`apps/web`).
  */
 export const kitchenKinBetterAuthOptions = {
   appName: "KitchenKin",
@@ -61,17 +67,26 @@ export const kitchenKinBetterAuthOptions = {
       clientId: requireEnv(["AUTH_GOOGLE_ID"]),
       clientSecret: requireEnv(["AUTH_GOOGLE_SECRET"]),
     },
+    reddit: {
+      clientId: requireEnv(["AUTH_REDDIT_ID"]),
+      clientSecret: requireEnv(["AUTH_REDDIT_SECRET"]),
+    },
   },
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google"],
+      trustedProviders: ["google", "reddit"],
     },
   },
-  secondaryStorage: redisStorage({
-    client: redis,
-    keyPrefix: "kk-auth:",
-  }),
+  secondaryStorage: resilientSecondaryStorage(
+    redisStorage({
+      client: redis,
+      keyPrefix: "kk-auth:",
+    }),
+  ),
+  verification: {
+    storeInDatabase: true,
+  },
   session: {
     storeSessionInDatabase: true,
     cookieCache: {

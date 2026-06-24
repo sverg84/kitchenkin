@@ -1,23 +1,24 @@
-import { useEffect } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { signOutAndClearQueries } from "@kk/shared";
+
 import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
-import { useGoogleSignIn } from "@/lib/auth/google";
-import { session, useSession } from "@/lib/auth/session";
+import { authClient } from "@/lib/auth/auth-client";
+import {
+  useSocialSignIn,
+  type SocialSignInStatus,
+} from "@/lib/auth/social-sign-in";
 
 export default function AccountScreen() {
-  const state = useSession();
-  const google = useGoogleSignIn();
+  const { data, isPending } = authClient.useSession();
+  const google = useSocialSignIn("google");
+  const reddit = useSocialSignIn("reddit");
 
-  useEffect(() => {
-    // Restore any persisted session on first mount.
-    if (state.status === "loading") {
-      void session.hydrate();
-    }
-  }, [state.status]);
+  const signedIn = Boolean(data?.session);
 
   return (
     <ThemedView style={styles.container}>
@@ -26,17 +27,18 @@ export default function AccountScreen() {
           Account
         </ThemedText>
 
-        {state.status === "loading" ? (
+        {isPending ? (
           <View style={styles.center}>
             <ActivityIndicator />
           </View>
-        ) : state.status === "authenticated" ? (
-          <SignedInPanel />
+        ) : signedIn ? (
+          <SignedInPanel user={data?.user} />
         ) : (
           <SignedOutPanel
-            status={google.status}
-            error={google.error}
-            onSignIn={google.signIn}
+            providers={[
+              { label: "Google", ...google },
+              { label: "Reddit", ...reddit },
+            ]}
           />
         )}
       </SafeAreaView>
@@ -44,17 +46,30 @@ export default function AccountScreen() {
   );
 }
 
-function SignedInPanel() {
+function SignedInPanel({
+  user,
+}: {
+  user: { name?: string | null; email?: string | null } | undefined;
+}) {
+  const queryClient = useQueryClient();
+  const displayName = user?.name ?? user?.email;
+
+  async function handleSignOut() {
+    await signOutAndClearQueries(authClient, queryClient);
+  }
+
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText type="subtitle">You&apos;re signed in</ThemedText>
+      <ThemedText type="subtitle">
+        {displayName ? `Signed in as ${displayName}` : "You're signed in"}
+      </ThemedText>
       <ThemedText type="small">
-        Your Better Auth session cookie is stored on device; GraphQL sends it
-        to the web app proxy.
+        Your Better Auth session cookie is stored on device and sent to the
+        web app REST API.
       </ThemedText>
       <Pressable
         onPress={() => {
-          void session.signOut();
+          void handleSignOut();
         }}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
@@ -64,46 +79,64 @@ function SignedInPanel() {
   );
 }
 
-interface SignedOutPanelProps {
-  status: ReturnType<typeof useGoogleSignIn>["status"];
+interface ProviderSignIn {
+  status: SocialSignInStatus;
   error: string | null;
-  onSignIn: () => Promise<void>;
+  signIn: () => Promise<void>;
+  label: string;
 }
 
-function SignedOutPanel({ status, error, onSignIn }: SignedOutPanelProps) {
-  const busy = status === "busy";
-  const disabled = busy || status === "unconfigured";
+interface SignedOutPanelProps {
+  providers: ProviderSignIn[];
+}
+
+function SignedOutPanel({ providers }: SignedOutPanelProps) {
+  const anyBusy = providers.some((p) => p.status === "busy");
+  const unconfigured = providers.every((p) => p.status === "unconfigured");
+  const error = providers.map((p) => p.error).find(Boolean) ?? null;
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedText type="subtitle">Sign in</ThemedText>
       <ThemedText type="small">
-        Sign in with Google to sync your KitchenKin recipes across devices.
+        Sign in with Google or Reddit to sync your KitchenKin recipes across
+        devices.
       </ThemedText>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        onPress={() => {
-          void onSignIn();
-        }}
-        style={({ pressed }) => [
-          styles.button,
-          (pressed || busy) && styles.pressed,
-          disabled && styles.disabled,
-        ]}
-      >
-        {busy ? (
-          <ActivityIndicator />
-        ) : (
-          <ThemedText type="link">
-            {status === "unconfigured"
-              ? "Google sign-in unavailable"
-              : "Continue with Google"}
-          </ThemedText>
-        )}
-      </Pressable>
+      {providers.map((provider) => {
+        const disabled =
+          anyBusy ||
+          provider.status === "unconfigured" ||
+          unconfigured;
+        const busy = provider.status === "busy";
+
+        return (
+          <Pressable
+            key={provider.label}
+            accessibilityRole="button"
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={() => {
+              void provider.signIn();
+            }}
+            style={({ pressed }) => [
+              styles.button,
+              (pressed || busy) && styles.pressed,
+              disabled && styles.disabled,
+            ]}
+          >
+            {busy ? (
+              <ActivityIndicator />
+            ) : (
+              <ThemedText type="link">
+                {unconfigured
+                  ? `${provider.label} sign-in unavailable`
+                  : `Continue with ${provider.label}`}
+              </ThemedText>
+            )}
+          </Pressable>
+        );
+      })}
 
       {error ? (
         <ThemedText type="small" themeColor="textSecondary">

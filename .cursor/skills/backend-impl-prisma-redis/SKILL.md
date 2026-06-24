@@ -1,22 +1,22 @@
 ---
 name: backend-impl-prisma-redis
-description: Implements or modifies KK backend logic (GraphQL resolvers + Prisma queries + Redis caching) based on an approved design. Use when implementing resolvers, optimizing Prisma database interactions, adding Redis caching (keys/invalidation/consistency), or tuning backend performance without changing schema/architecture unless explicitly required.
+description: Implements or modifies KK backend logic (@kk/domain + Prisma + Redis) based on an approved design. Use when implementing domain services, REST route handlers, optimizing Prisma queries, or adding Redis caching.
 ---
 
-# Backend Implementation & Optimization (Prisma + Redis)
+# Backend Implementation & Optimization (Domain + Prisma + Redis)
 
-Implement or modify backend logic based on an existing or approved design using GraphQL, Prisma, and Redis.
-
-Focus on resolver implementation, Prisma query logic, and service-layer behavior. Implement Redis caching where appropriate, including clear cache keys, invalidation strategy, and consistency handling. Ensure database interactions are efficient and aligned with existing Prisma patterns. Avoid changing schema or architecture unless explicitly required. Keep changes minimal, localized, and consistent with existing backend structure.
+Implement or modify backend logic based on an existing or approved design using `@kk/domain`, Prisma, and Redis.
 
 ## KK backend touchpoints (use these)
 
-- **GraphQL HTTP server**: `apps/api` (Bun + Hono + Apollo Server) — `/graphql`, `/auth/mobile/*`, CORS from `apps/api/src/cors.ts`.
-- **Pothos schema modules**: `packages/api/src/schema/*.ts` (registry: `packages/api/src/schema/index.ts`, builder: `builder.ts`).
-- **Prisma**: `packages/db` — schema `packages/db/prisma/schema.prisma`, client via `@kk/db` (avoid schema changes unless asked).
-- **Redis (auth)**: `packages/auth/src/auth-options-core.ts` — Better Auth `secondaryStorage` via `REDIS_URL`. For GraphQL resolver caching, add keys in the resolver/service layer; no shared redis helper yet.
+- **Domain services**: `packages/domain/src/**` — server-only; `import "server-only"` in Prisma modules.
+- **REST route handlers**: `apps/web/src/app/api/**` — resolve auth with `auth()` from `apps/web/auth.ts`, call domain with `userId`.
+- **Server Actions**: `apps/web/src/lib/prisma/server-actions.ts` — thin wrappers over domain for web form writes.
+- **API contract**: `docs/api.md` + Zod in `packages/shared/src/api/`.
+- **Prisma**: `packages/db` — schema `packages/db/prisma/schema.prisma`, client via `@kk/db`.
+- **Redis (auth)**: `packages/auth/src/auth-options-core.ts` — Better Auth `secondaryStorage` via `REDIS_URL`.
 
-Prefer extending existing modules under `packages/api/src/schema/` for resolvers and keeping logic close to where similar KK code lives.
+Prefer extending existing domain modules (`recipes/`, `categories/`) rather than new abstractions.
 
 ## Preconditions
 
@@ -34,8 +34,8 @@ Prefer extending existing modules under `packages/api/src/schema/` for resolvers
 
 ### 2) Locate the right module(s)
 
-- Identify the target file(s) under `packages/api/src/schema/`.
-- Match existing patterns (e.g., `t.prismaField`, `t.prismaConnection`, `t.connection`, authScopes).
+- Identify the target file(s) under `packages/domain/src/`.
+- Match existing patterns (cursor pagination in `recipes/list-recipes.ts`, explicit `select` in `recipe-select.ts`).
 
 ### 3) Implement resolver logic (minimal and localized)
 

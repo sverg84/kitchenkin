@@ -1,4 +1,4 @@
-import { imageCreateHandler } from "@/lib/lambda";
+import { imageCreateHandler } from "@kk/domain";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {

@@ -2,11 +2,9 @@ import { Plus } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import Link from "next/link";
-import RecipeList from "../recipe/list/recipe-list";
+import MyRecipesList from "../recipe/list/my-recipes-list";
 
 export default function ProfileRecipes() {
-  const variables = { first: 24 };
-
   return (
     <>
       <div className="flex items-center justify-between">
@@ -19,9 +17,7 @@ export default function ProfileRecipes() {
         </Button>
       </div>
 
-      <RecipeList
-        query="myRecipes"
-        variables={variables}
+      <MyRecipesList
         emptyState={
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">

@@ -7,12 +7,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --filter @kk/web --filter @kk/api-server dev",
+    "dev": "bun run --filter @kk/web dev",
     "dev:web": "bun run --filter @kk/web dev",
-    "dev:api": "bun run --filter @kk/api-server dev",
     "build": "bun run --filter @kk/web build",
     "lint": "bun run --filter @kk/web lint",
-    "gql": "bun run --filter @kk/graphql gql",
     "prisma-sanity": "bun run --filter @kk/web prisma-sanity",
     "review-packet": "bun run --filter @kk/web review-packet"
   },

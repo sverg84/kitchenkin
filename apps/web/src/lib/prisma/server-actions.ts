@@ -1,31 +1,18 @@
 "use server";
 
 import { auth } from "@/auth";
-import type {
-  CreateRecipeInput,
-  UpdateRecipeInput,
-  IngredientInput,
+import {
+  createRecipeInputSchema,
+  updateRecipeInputSchema,
+  type CreateRecipeInput,
+  type UpdateRecipeInput,
 } from "@kk/shared";
-import { detectAllergens, deleteImageInS3 } from "@/lib/lambda";
-import { prisma } from "@kk/db";
+import {
+  createRecipeForUser,
+  updateRecipeForUser,
+  deleteRecipeForUser,
+} from "@kk/domain";
 import { redirect } from "next/navigation";
-
-/**
- * For each ingredient input, if the input combination already exists,
- * connect to the existing DB entry. Otherwise, create a new DB entry.
- */
-const ingredientsInputToDbOperation = (ingredients: IngredientInput[]) => ({
-  connectOrCreate: ingredients.map((ingredient) => ({
-    where: {
-      name_amount_unit: {
-        name: ingredient.name,
-        amount: ingredient.amount,
-        unit: ingredient.unit,
-      },
-    },
-    create: ingredient,
-  })),
-});
 
 async function authorizedInvariant(): Promise<string> {
   const session = await auth();
@@ -37,155 +24,47 @@ async function authorizedInvariant(): Promise<string> {
   return session.user.id;
 }
 
-/**
- * Throw an error if the acting user is not the same as the recipe's author
- * @param recipeId
- * @param userId
- */
-async function recipeAuthorInvariant(recipeId: string): Promise<void> {
-  const userId = await authorizedInvariant();
-  const recipe = await prisma.recipe.findUnique({
-    where: { id: recipeId, authorId: userId },
-    select: { id: true },
-  });
-
-  if (!recipe) {
-    throw new Error("Not authorized to make changes to this recipe");
-  }
-}
-
 export async function createRecipe(
   _previousState: string | null,
   data: unknown,
 ) {
-  let recipe = null;
+  let recipeId: string | null = null;
   try {
     const userId = await authorizedInvariant();
-
-    const input = data as CreateRecipeInput;
-    const { image: imageData, ingredients, categoryId, ...recipeData } = input;
-
-    const allergens = await detectAllergens(input);
-    recipe = await prisma.recipe.create({
-      data: {
-        ...recipeData,
-        allergens,
-        category: {
-          connect: {
-            id: categoryId,
-          },
-        },
-        author: {
-          connect: {
-            id: userId,
-          },
-        },
-        ingredients: ingredientsInputToDbOperation(ingredients),
-        // Create an image *only* if input data for it exists
-        image: imageData
-          ? {
-              create: imageData,
-            }
-          : undefined,
-      },
-      select: { id: true },
-    });
+    const input = createRecipeInputSchema.parse(data) satisfies CreateRecipeInput;
+    const recipe = await createRecipeForUser(userId, input);
+    recipeId = recipe.id;
   } catch (error) {
     if (error instanceof Error) {
       return error.message;
     }
   }
 
-  redirect(`/recipe/${recipe!.id}`);
+  redirect(`/recipe/${recipeId!}`);
 }
 
-/**
- * Update the data for a given recipe with whatever dirty
- * fields have been provided. If a value for a field is
- * provided, that field will be treated as "dirty" and updated
- * for the Recipe.
- *
- * If the "image" field is null and the Recipe has an
- * Image, that image will be removed from the Recipe.
- */
 export async function updateRecipe(
   _previousState: string | null,
   data: unknown,
 ) {
-  let recipe = null;
+  let recipeId: string | null = null;
 
   try {
-    const input = data as UpdateRecipeInput;
-
-    await recipeAuthorInvariant(input.id);
-
-    const {
-      id,
-      categoryId,
-      ingredients,
-      image: imageInput,
-      ...recipeData
-    } = input;
-
-    const allergens =
-      recipeData.title && ingredients
-        ? await detectAllergens(input)
-        : undefined;
-
-    recipe = await prisma.$transaction(async (client) => {
-      // If the image is replaced or removed, delete the old one
-      if (imageInput === null || imageInput) {
-        await client.image.deleteMany({ where: { recipeId: id } });
-      }
-
-      return await client.recipe.update({
-        where: { id },
-        data: {
-          ...recipeData,
-          allergens,
-          category: categoryId
-            ? {
-                connect: { id: categoryId },
-              }
-            : undefined,
-          ingredients: ingredients
-            ? {
-                set: [],
-                ...ingredientsInputToDbOperation(ingredients),
-              }
-            : undefined,
-          image: imageInput
-            ? {
-                create: imageInput,
-              }
-            : undefined,
-        },
-        select: { id: true },
-      });
-    });
+    const userId = await authorizedInvariant();
+    const input = updateRecipeInputSchema.parse(data) satisfies UpdateRecipeInput;
+    const recipe = await updateRecipeForUser(userId, input);
+    recipeId = recipe.id;
   } catch (error) {
     if (error instanceof Error) {
       return error.message;
     }
   }
 
-  redirect(`/recipe/${recipe!.id}`);
+  redirect(`/recipe/${recipeId!}`);
 }
 
 export async function deleteRecipe(id: string) {
-  await recipeAuthorInvariant(id);
-
-  await Promise.all([
-    deleteImageInS3(id),
-    prisma.recipe.delete({
-      where: { id },
-      include: {
-        category: true,
-        ingredients: true,
-        image: true,
-      },
-    }),
-  ]);
-
+  const userId = await authorizedInvariant();
+  await deleteRecipeForUser(userId, id);
   redirect("/");
 }

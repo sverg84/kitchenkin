@@ -1,32 +1,33 @@
-import { ApolloProvider } from "@apollo/client/react";
+"use client";
+
+import { QueryClientProvider } from "@tanstack/react-query";
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useColorScheme } from "react-native";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import AppTabs from "@/components/app-tabs";
-import { apolloClient } from "@/lib/apollo-client";
-import { session } from "@/lib/auth/session";
+import { authClient } from "@/lib/auth/auth-client";
+import { createMobileQueryClient } from "@/lib/query/get-query-client";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const [queryClient] = useState(() => createMobileQueryClient());
 
-  // Restore persisted mobile session once at app start so authenticated
-  // GraphQL requests work even before the user visits the Account tab.
   useEffect(() => {
-    void session.hydrate();
+    void authClient.getSession();
   }, []);
 
   return (
-    <ApolloProvider client={apolloClient}>
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
         <AppTabs />
       </ThemeProvider>
-    </ApolloProvider>
+    </QueryClientProvider>
   );
 }

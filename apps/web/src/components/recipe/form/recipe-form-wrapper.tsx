@@ -1,5 +1,5 @@
 import { RecipeForm } from "./recipe-form";
-import type { GetRecipeQuery } from "@kk/graphql";
+import type { RecipeDTO } from "@kk/shared";
 
 interface CreateProps {
   formMode: "create";
@@ -8,14 +8,14 @@ interface CreateProps {
 
 interface EditProps {
   formMode: "update";
-  initialRecipe: NonNullable<GetRecipeQuery["recipe"]>;
+  initialRecipe: RecipeDTO;
 }
 
 type Pls = CreateProps | EditProps;
 
 type Props = Readonly<
   {
-    categories: Array<{ rawId: string; name: string }>;
+    categories: Array<{ id: string; name: string }>;
   } & Pls
 >;
 

@@ -1,4 +1,4 @@
-import { useRecipes } from "@kk/graphql";
+import { useRecipes } from "@/lib/query/hooks/use-recipes";
 import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -7,7 +7,11 @@ import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
 
 export default function HomeScreen() {
-  const { recipes, loading, error } = useRecipes();
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useRecipes();
+
+  const recipes =
+    data?.pages.flatMap((page) => page.edges.map((edge) => edge.node)) ?? [];
 
   return (
     <ThemedView style={styles.container}>
@@ -16,7 +20,7 @@ export default function HomeScreen() {
           Delicious Recipes
         </ThemedText>
 
-        {loading && recipes.length === 0 ? (
+        {isLoading && recipes.length === 0 ? (
           <View style={styles.center}>
             <ActivityIndicator />
           </View>
@@ -29,20 +33,31 @@ export default function HomeScreen() {
             style={styles.list}
             contentContainerStyle={styles.listContent}
             data={recipes}
-            keyExtractor={(recipe) => recipe?.rawId ?? ""}
-            renderItem={({ item }) =>
-              item ? (
-                <ThemedView type="backgroundElement" style={styles.card}>
-                  <ThemedText type="subtitle">{item.title}</ThemedText>
-                  {item.description ? (
-                    <ThemedText type="small" numberOfLines={2}>
-                      {item.description}
-                    </ThemedText>
-                  ) : null}
-                </ThemedView>
+            keyExtractor={(recipe) => recipe.id}
+            renderItem={({ item }) => (
+              <ThemedView type="backgroundElement" style={styles.card}>
+                <ThemedText type="subtitle">{item.title}</ThemedText>
+                {item.description ? (
+                  <ThemedText type="small" numberOfLines={2}>
+                    {item.description}
+                  </ThemedText>
+                ) : null}
+              </ThemedView>
+            )}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) {
+                void fetchNextPage();
+              }
+            }}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={styles.center}>
+                  <ActivityIndicator />
+                </View>
               ) : null
             }
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
           />
         )}
       </SafeAreaView>
