@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { RecipeFormWrapper } from "@/components/recipe/form/recipe-form-wrapper";
-import { getRecipeById, listCategories } from "@kk/domain";
+import { getRecipeById } from "@kk/domain";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { RecipeFormFallback } from "@/components/suspense-fallbacks/recipe-form-fallback";
@@ -29,11 +29,7 @@ async function EditRecipePageContent({
   }
 
   const { id } = await params;
-
-  const [categoriesConnection, recipe] = await Promise.all([
-    listCategories({ first: 100 }),
-    getRecipeById(id),
-  ]);
+  const recipe = await getRecipeById(id);
 
   if (!recipe) {
     notFound();
@@ -43,13 +39,7 @@ async function EditRecipePageContent({
     redirect(`/recipe/${id}`);
   }
 
-  const categories = categoriesConnection.edges.map((edge) => edge.node);
-
   return (
-    <RecipeFormWrapper
-      categories={categories}
-      formMode="update"
-      initialRecipe={recipe}
-    />
+    <RecipeFormWrapper formMode="update" initialRecipe={recipe} />
   );
 }

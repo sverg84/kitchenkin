@@ -3,11 +3,12 @@ import "server-only";
 import type {
   CreateRecipeInput,
   IngredientInput,
+  RecipeTagLabel,
   UpdateRecipeInput,
 } from "@kk/shared";
 import { prisma } from "@kk/db";
 
-import { detectAllergens, deleteImageInS3 } from "@kk/aws";
+import { detectAllergens, detectTags, deleteImageInS3 } from "@kk/aws";
 
 import { ForbiddenError } from "../auth/errors";
 
@@ -38,19 +39,30 @@ async function assertRecipeAuthor(
   }
 }
 
+async function resolveTags(
+  inputTags: RecipeTagLabel[] | undefined,
+  detectInput: Pick<UpdateRecipeInput, "title" | "description" | "ingredients">,
+): Promise<RecipeTagLabel[] | undefined> {
+  if (inputTags === undefined) return undefined;
+  if (inputTags.length > 0) return inputTags;
+  return detectTags(detectInput);
+}
+
 export async function createRecipeForUser(
   userId: string,
   input: CreateRecipeInput,
 ): Promise<{ id: string }> {
-  const { image: imageData, ingredients, categoryId, ...recipeData } = input;
+  const { image: imageData, ingredients, tags: inputTags, ...recipeData } =
+    input;
 
   const allergens = await detectAllergens(input);
+  const tags = await resolveTags(inputTags, input);
 
   const recipe = await prisma.recipe.create({
     data: {
       ...recipeData,
       allergens,
-      category: { connect: { id: categoryId } },
+      tags: tags ?? [],
       author: { connect: { id: userId } },
       ingredients: ingredientsInputToDbOperation(ingredients),
       image: imageData ? { create: imageData } : undefined,
@@ -69,7 +81,7 @@ export async function updateRecipeForUser(
 
   const {
     id,
-    categoryId,
+    tags: inputTags,
     ingredients,
     image: imageInput,
     ...recipeData
@@ -79,6 +91,39 @@ export async function updateRecipeForUser(
     recipeData.title && ingredients
       ? await detectAllergens(input)
       : undefined;
+
+  let detectInput: Pick<
+    UpdateRecipeInput,
+    "title" | "description" | "ingredients"
+  > = {
+    title: recipeData.title,
+    description: recipeData.description,
+    ingredients,
+  };
+
+  if (
+    inputTags !== undefined &&
+    inputTags.length === 0 &&
+    (!detectInput.title || !detectInput.ingredients)
+  ) {
+    const existing = await prisma.recipe.findUniqueOrThrow({
+      where: { id },
+      select: {
+        title: true,
+        description: true,
+        ingredients: {
+          select: { name: true, amount: true, unit: true },
+        },
+      },
+    });
+    detectInput = {
+      title: detectInput.title ?? existing.title,
+      description: detectInput.description ?? existing.description,
+      ingredients: detectInput.ingredients ?? existing.ingredients,
+    };
+  }
+
+  const tags = await resolveTags(inputTags, detectInput);
 
   const recipe = await prisma.$transaction(async (client) => {
     if (imageInput === null || imageInput) {
@@ -90,7 +135,7 @@ export async function updateRecipeForUser(
       data: {
         ...recipeData,
         allergens,
-        category: categoryId ? { connect: { id: categoryId } } : undefined,
+        tags,
         ingredients: ingredients
           ? {
               set: [],

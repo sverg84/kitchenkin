@@ -11,25 +11,24 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { startTransition, useRef, useActionState, useState } from "react";
 import { createRecipe, updateRecipe } from "@/lib/prisma/server-actions";
 import { Spinner } from "@/components/ui/spinner";
-import type { RecipeDTO } from "@kk/shared";
-import { recipeFormSchema, type RecipeFormData } from "@kk/shared";
+import type { RecipeDTO, RecipeTagLabel } from "@kk/shared";
+import {
+  RECIPE_TAG_LABELS,
+  formatRecipeTagLabel,
+  recipeFormSchema,
+  type RecipeFormData,
+} from "@kk/shared";
 
 const unitItems = {
   capacity: [
@@ -50,16 +49,11 @@ const unitItems = {
 } as const;
 
 interface RecipeFormProps {
-  categories: Array<{ id: string; name: string }>;
   initialRecipe: RecipeDTO | undefined;
   type: "create" | "update";
 }
 
-export function RecipeForm({
-  categories,
-  initialRecipe,
-  type,
-}: RecipeFormProps) {
+export function RecipeForm({ initialRecipe, type }: RecipeFormProps) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
@@ -76,7 +70,7 @@ export function RecipeForm({
       type,
       ...(type === "update" ? { id: initialRecipe?.id } : null),
       image: undefined,
-      categoryId: initialRecipe?.category.id ?? "",
+      tags: initialRecipe?.tags ?? [],
       title: initialRecipe?.title || "",
       description: initialRecipe?.description || "",
       prepTime: initialRecipe?.prepTime || "",
@@ -97,6 +91,15 @@ export function RecipeForm({
   const instructions =
     useWatch({ control, name: "instructions" }) ?? [""];
   const imageFileName = useWatch({ control, name: "image.fileName" });
+  const selectedTags = useWatch({ control, name: "tags" }) ?? [];
+
+  function toggleTag(tag: RecipeTagLabel) {
+    const current = getValues("tags") ?? [];
+    const next = current.includes(tag)
+      ? current.filter((t) => t !== tag)
+      : [...current, tag].sort((a, b) => a.localeCompare(b));
+    setValue("tags", next, { shouldDirty: true, shouldValidate: true });
+  }
 
   function getDirtyValues(): Partial<RecipeFormData> {
     const dirtyFields = form.formState.dirtyFields;
@@ -138,6 +141,10 @@ export function RecipeForm({
           ) {
             dirtyValues[key] = formValues.ingredients;
           }
+          break;
+        }
+        case "tags": {
+          dirtyValues.tags = formValues.tags;
           break;
         }
         default: {
@@ -209,11 +216,15 @@ export function RecipeForm({
     // Extend the type to allow imageData
     type ValuesWithImageData = typeof restValues & {
       id?: string;
+      tags?: RecipeTagLabel[];
     };
     const values: ValuesWithImageData = { ...restValues };
 
     if (type === "update") {
       values.id = initialRecipe!.id;
+    } else {
+      // Always send tags on create (possibly []) so AI-fill can run when empty.
+      values.tags = getValues("tags") ?? [];
     }
 
     if (values.image) {
@@ -367,30 +378,33 @@ export function RecipeForm({
 
               <FormField
                 control={control}
-                name="categoryId"
-                render={({ field, fieldState: { error } }) => (
+                name="tags"
+                render={() => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>Tags</FormLabel>
+                    <FormDescription>
+                      Optional. Leave empty and KitchenKin will suggest tags
+                      when you save.
+                    </FormDescription>
                     <FormControl>
-                      <Select
-                        disabled={loading}
-                        value={field.value ?? ""}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger aria-invalid={!!error}>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem
-                              key={category.id}
-                              value={category.id}
+                      <div className="flex flex-wrap gap-2">
+                        {RECIPE_TAG_LABELS.map((tag) => {
+                          const selected = selectedTags.includes(tag);
+                          return (
+                            <Button
+                              key={tag}
+                              type="button"
+                              size="sm"
+                              variant={selected ? "default" : "outline"}
+                              disabled={loading}
+                              aria-pressed={selected}
+                              onClick={() => toggleTag(tag)}
                             >
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                              {formatRecipeTagLabel(tag)}
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

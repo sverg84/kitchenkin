@@ -10,7 +10,6 @@ export {
   deleteRecipeForUser,
 } from "./recipes/mutations";
 export { toggleFavorite } from "./recipes/toggle-favorite";
-export { listCategories } from "./categories/list-categories";
 export { imageCreateHandler } from "./integrations/lambda";
 export {
   UnauthorizedError,

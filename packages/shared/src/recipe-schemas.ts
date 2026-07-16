@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { recipeTagSchema } from "./tags";
+
 // Recipe prep/cook time is stored as "<n> min" or "<n> minutes".
 export const recipeTimePattern = /^\d+\s?(min|minutes)$/;
 
@@ -53,17 +55,24 @@ export const recipeInputBaseSchema = z.strictObject({
   prepTime: z.string().trim().regex(recipeTimePattern),
   cookTime: z.string().trim().regex(recipeTimePattern),
   servings: z.coerce.number().int().gt(0),
-  categoryId: z.cuid(),
+  tags: z.array(recipeTagSchema),
   instructions: z.array(z.string().trim().nonempty()),
   image: imageInputSchema.optional(),
   ingredients: ingredientInputSchema.array(),
 });
 
 /** Server-action payload for creating a recipe (no `type` discriminator). */
-export const createRecipeInputSchema = recipeInputBaseSchema;
+export const createRecipeInputSchema = recipeInputBaseSchema.extend({
+  tags: z.array(recipeTagSchema).default([]),
+});
 
-/** Server-action payload for updating a recipe — base + id. */
-export const updateRecipeInputSchema = recipeInputBaseSchema.extend({
+
+/**
+ * Server-action / REST payload for updating a recipe.
+ * Fields are partial so dirty-field form submits and mobile PATCH work;
+ * `id` is always required.
+ */
+export const updateRecipeInputSchema = recipeInputBaseSchema.partial().extend({
   id: z.string().cuid(),
 });
 
