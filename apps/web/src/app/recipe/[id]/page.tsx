@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { RecipeImage } from "@/components/recipe/recipe-image";
 import { auth } from "@/auth";
 import { Allergen } from "@kk/db";
+import { formatRecipeTagLabel } from "@kk/shared";
 import {
   Dialog,
   DialogContent,
@@ -91,7 +92,9 @@ async function RecipePageContent({
           </p>
           <p className="text-muted-foreground mb-4">{recipe.description}</p>
           <div className="flex flex-wrap gap-2 mb-4 items-center">
-            <Badge>{recipe.category.name}</Badge>
+            {recipe.tags.map((tag) => (
+              <Badge key={tag}>{formatRecipeTagLabel(tag)}</Badge>
+            ))}
             <div className="flex items-center">
               <Clock className="size-4 mr-1" />
               <span className="text-sm">Prep: {recipe.prepTime}</span>

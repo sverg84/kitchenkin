@@ -73,7 +73,7 @@ Public recipe detail.
 
 Create recipe (mobile). **401** if no session.
 
-**Body:** `CreateRecipeInput` (Zod `createRecipeInputSchema` in `@kk/shared`)
+**Body:** `CreateRecipeInput` (Zod `createRecipeInputSchema` in `@kk/shared`). Includes `tags: RecipeTag[]` (default `[]`). When `tags` is empty on create, the server AI-fills from the closed allowlist.
 
 **Response:** `{ "id": "<cuid>" }` with **201**
 
@@ -81,7 +81,7 @@ Create recipe (mobile). **401** if no session.
 
 Update recipe (mobile). **401** / **403** if not author.
 
-**Body:** `UpdateRecipeInput`
+**Body:** `UpdateRecipeInput` (partial; `id` required). If `tags` is omitted, existing tags are unchanged. If `tags` is `[]`, the server AI-fills. If `tags` is non-empty, those values are persisted as-is.
 
 **Response:** `{ "id": "<cuid>" }`
 
@@ -97,14 +97,6 @@ Toggle favorite for current user. **401** if no session.
 
 **Response:** `{ "favorited": boolean }`
 
-### `GET /api/categories`
-
-Public category list (cursor paginated).
-
-| Query | `first`, `after` |
-
-**Response:** `CategoryConnection`
-
 ### `POST /api/image-upload`
 
 Unchanged — Lambda proxy for recipe form image upload (not part of GraphQL migration).
@@ -113,9 +105,10 @@ Unchanged — Lambda proxy for recipe form image upload (not part of GraphQL mig
 
 Zod schemas and inferred TypeScript types live in `packages/shared/src/api/`. Key exports:
 
-- `RecipeDTO` — list card + detail fields
-- `RecipeConnection`, `CategoryConnection`
+- `RecipeDTO` — list card + detail fields (includes `tags: RecipeTag[]`)
+- `RecipeConnection`
 - `paginationQuerySchema`
+- `recipeTagSchema` / `RECIPE_TAG_LABELS` — closed tag allowlist
 
 ## Client patterns
 

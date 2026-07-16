@@ -1,14 +1,8 @@
 import { z } from "zod";
 
 import { allergenSchema } from "../allergens";
+import { recipeTagSchema } from "../tags";
 import { connectionSchema } from "./pagination";
-
-export const categoryDtoSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-});
-
-export type CategoryDTO = z.infer<typeof categoryDtoSchema>;
 
 export const imageDtoSchema = z.object({
   src: z.string(),
@@ -41,7 +35,7 @@ export const recipeDtoSchema = z.object({
   cookTime: z.string(),
   servings: z.number().int(),
   instructions: z.array(z.string()),
-  category: categoryDtoSchema,
+  tags: z.array(recipeTagSchema),
   image: imageDtoSchema.nullable().optional(),
   author: authorDtoSchema,
   ingredients: z.array(ingredientDtoSchema),
@@ -57,7 +51,7 @@ export const recipeListItemDtoSchema = recipeDtoSchema.pick({
   description: true,
   prepTime: true,
   cookTime: true,
-  category: true,
+  tags: true,
   image: true,
 });
 

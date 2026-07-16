@@ -16,7 +16,7 @@ Implement or modify backend logic based on an existing or approved design using 
 - **Prisma**: `packages/db` — schema `packages/db/prisma/schema.prisma`, client via `@kk/db`.
 - **Redis (auth)**: `packages/auth/src/auth-options-core.ts` — Better Auth `secondaryStorage` via `REDIS_URL`.
 
-Prefer extending existing domain modules (`recipes/`, `categories/`) rather than new abstractions.
+Prefer extending existing domain modules (`recipes/`) rather than new abstractions.
 
 ## Preconditions
 

@@ -6,13 +6,13 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
-import type { RecipeDTO } from "@kk/shared";
+import { formatRecipeTagLabel, type RecipeDTO } from "@kk/shared";
 import { RecipeImage } from "../recipe-image";
 
 interface RecipeCardProps {
   recipe: Pick<
     RecipeDTO,
-    "id" | "title" | "description" | "prepTime" | "cookTime" | "category" | "image"
+    "id" | "title" | "description" | "prepTime" | "cookTime" | "tags" | "image"
   >;
 }
 
@@ -23,10 +23,16 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
         <RecipeImage recipe={recipe} />
       </div>
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">{recipe.title}</h3>
-          <Badge>{recipe.category.name}</Badge>
-        </div>
+        <h3 className="text-lg font-semibold">{recipe.title}</h3>
+        {recipe.tags.length > 0 ? (
+          <ul className="mt-2 flex flex-wrap gap-1.5">
+            {recipe.tags.map((tag) => (
+              <li key={tag}>
+                <Badge>{formatRecipeTagLabel(tag)}</Badge>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground line-clamp-2">
