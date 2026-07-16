@@ -18,21 +18,20 @@ export type AllergenLabel = z.infer<typeof allergenSchema>;
 export const ALLERGEN_LABELS = allergenSchema.options;
 
 /**
- * Bedrock allergen JSON: requires `{ allergens: unknown[] }`, then filters to
- * known enum values, dedupes, and sorts (lenient — ignores hallucinated labels).
+ * Bedrock allergen JSON: `{ allergens: AllergenLabel[] }`.
+ * Unknown labels fail validation. Recognized labels are deduped and sorted.
  */
 export const bedrockAllergensResponseSchema = z
   .object({
-    allergens: z.array(z.unknown()),
+    allergens: z.array(allergenSchema),
   })
   .transform(({ allergens }): AllergenLabel[] => {
     const seen = new Set<string>();
     const out: AllergenLabel[] = [];
     for (const item of allergens) {
-      const parsed = allergenSchema.safeParse(item);
-      if (!parsed.success || seen.has(parsed.data)) continue;
-      seen.add(parsed.data);
-      out.push(parsed.data);
+      if (seen.has(item)) continue;
+      seen.add(item);
+      out.push(item);
     }
     out.sort((a, b) => a.localeCompare(b));
     return out;

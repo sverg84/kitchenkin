@@ -26,13 +26,16 @@ export function getS3Region(): string {
   return envStr(["AWS_S3_REGION"]) || "us-west-1";
 }
 
-/** Prefer `AWS_S3_BUCKET`; else kitchenkin-local in development, kitchenkin otherwise. */
+/** Prefer `AWS_S3_BUCKET`; else `kitchenkin-local` only when `NODE_ENV=development`. */
 export function getS3Bucket(): string {
   const explicit = envStr(["AWS_S3_BUCKET"]);
   if (explicit) return explicit;
-  return process.env.NODE_ENV === "development"
-    ? "kitchenkin-local"
-    : "kitchenkin";
+  if (process.env.NODE_ENV === "development") {
+    return "kitchenkin-local";
+  }
+  throw new Error(
+    "Missing required env: AWS_S3_BUCKET (required when NODE_ENV is not development)",
+  );
 }
 
 export function getAwsCredentials(): {

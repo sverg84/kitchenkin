@@ -77,7 +77,14 @@ On simulator: `http://127.0.0.1:3000`. See [apps/mobile/README.md](apps/mobile/R
 
 Single Vercel project with **Root Directory** `apps/web`. Set `DATABASE_URL`, `AUTH_*`, `REDIS_URL`, AWS credentials for `@kk/aws`, and `IMAGE_UPLOAD_ENDPOINT` on the web project.
 
-Use a dedicated IAM user (not root) with least privilege: `bedrock:InvokeModel` on the Haiku model in `us-west-2`, plus `s3:ListBucket` / `s3:DeleteObject` on `kitchenkin` and `kitchenkin-local`.
+Use a dedicated IAM user (not root) with least privilege for `@kk/aws`:
+
+- **Bedrock** — app calls the **global** inference profile `global.anthropic.claude-haiku-4-5-20251001-v1:0` (default client region `us-west-2`). Grant `bedrock:InvokeModel` on:
+  - Inference profile: `arn:aws:bedrock:us-west-2:<ACCOUNT_ID>:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0`
+  - In-region foundation model: `arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0`
+  - Global foundation model (cross-Region destinations): `arn:aws:bedrock:::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0`
+  - Scope the two foundation-model statements with condition `bedrock:InferenceProfileArn` equal to the inference-profile ARN above (and `aws:RequestedRegion: unspecified` on the global FM statement). See [Global cross-Region inference](https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html).
+- **S3** — `s3:ListBucket` / `s3:DeleteObject` on `kitchenkin` and `kitchenkin-local`.
 
 | Variable | Purpose |
 |----------|---------|
@@ -87,7 +94,7 @@ Use a dedicated IAM user (not root) with least privilege: `bedrock:InvokeModel` 
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | IAM user for Bedrock + S3 delete (via `@kk/aws`) |
 | `AWS_BEDROCK_REGION` | Optional; default `us-west-2` |
 | `AWS_S3_REGION` | Optional; default `us-west-1` |
-| `AWS_S3_BUCKET` | Optional; defaults to `kitchenkin-local` when `NODE_ENV=development`, else `kitchenkin` |
+| `AWS_S3_BUCKET` | Required in production/preview (and any non-`development` `NODE_ENV`); defaults to `kitchenkin-local` only when `NODE_ENV=development` |
 | `IMAGE_UPLOAD_ENDPOINT` | Image-upload Lambda Function URL |
 
 `DETECT_ALLERGENS_ENDPOINT` and `IMAGE_DELETE_ENDPOINT` are no longer read by the app (logic moved to `@kk/aws`). Keep those Lambdas deployed only if you need rollback.

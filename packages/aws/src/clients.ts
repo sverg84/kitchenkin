@@ -16,7 +16,6 @@ export function getBedrockClient(): BedrockRuntimeClient {
   if (!bedrockClient) {
     bedrockClient = new BedrockRuntimeClient({
       region: getBedrockRegion(),
-      credentials: getAwsCredentials(),
     });
   }
   return bedrockClient;

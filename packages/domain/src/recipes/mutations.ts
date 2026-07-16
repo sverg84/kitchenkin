@@ -121,8 +121,9 @@ export async function deleteRecipeForUser(
 
   const imageHashId = existing.image?.id;
 
-  await Promise.all([
-    imageHashId ? deleteImageInS3(imageHashId) : Promise.resolve(),
-    prisma.recipe.delete({ where: { id: recipeId } }),
-  ]);
+  await prisma.recipe.delete({ where: { id: recipeId } });
+
+  if (imageHashId) {
+    await deleteImageInS3(imageHashId);
+  }
 }

@@ -30,7 +30,7 @@ See [Runtime-included SDK versions (Node.js)](https://docs.aws.amazon.com/lambda
 Example for image upload (index-only zip):
 
 ```bash
-cd "/Users/stephenvergara/Documents/GitHub/kitchenkin/lambda/image-upload"
+cd lambda/image-upload
 bun run zip:index
 ```
 
@@ -50,11 +50,15 @@ Repeat for rollback-only packages (`detect-allergens`, `image-delete`) only if y
 ## IAM Notes
 
 - All functions: CloudWatch logs permissions (`logs:CreateLogGroup`, `logs:CreateLogStream`, `logs:PutLogEvents`).
-- `detect-allergens` (rollback): `bedrock:InvokeModel` on the selected model.
+- `detect-allergens` (rollback) and Next.js `@kk/aws`: invoke global inference profile **`global.anthropic.claude-haiku-4-5-20251001-v1:0`** (source region typically `us-west-2`). Grant `bedrock:InvokeModel` on:
+  - `arn:aws:bedrock:us-west-2:<ACCOUNT_ID>:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0`
+  - `arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0` (in-region FM)
+  - `arn:aws:bedrock:::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0` (global FM for routed destination Regions)
+  - Condition foundation-model access with `bedrock:InferenceProfileArn` set to the inference-profile ARN (plus `aws:RequestedRegion: unspecified` on the global FM statement).
 - `image-upload`: S3 permissions for listing and writing objects in the target bucket(s) (`s3:ListBucket`, `s3:PutObject`).
 - `image-delete` (rollback): S3 permissions for listing and deleting objects (`s3:ListBucket`, `s3:DeleteObject`).
 
-For the Next.js app (`@kk/aws`), grant the dedicated IAM user the same Bedrock + S3 delete permissions; credentials live in `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` on Vercel / `apps/web/.env`.
+For the Next.js app (`@kk/aws`), grant the dedicated IAM user the Bedrock profile/FM permissions above plus S3 delete (`s3:ListBucket` / `s3:DeleteObject` on `kitchenkin` and `kitchenkin-local`). Credentials live in `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` on Vercel / `apps/web/.env`.
 
 ## Out of Scope for Now
 

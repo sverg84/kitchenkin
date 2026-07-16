@@ -50,6 +50,8 @@ Ingredients (one per line):
 ${ingredientLines.length ? ingredientLines.join("\n") : "(none)"}`;
 
   let data: { content?: Array<{ text?: string }> };
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25_000);
   try {
     const command = new InvokeModelCommand({
       modelId: "global.anthropic.claude-haiku-4-5-20251001-v1:0",
@@ -69,12 +71,16 @@ ${ingredientLines.length ? ingredientLines.join("\n") : "(none)"}`;
       accept: "application/json",
     });
 
-    const resp = await getBedrockClient().send(command);
+    const resp = await getBedrockClient().send(command, {
+      abortSignal: controller.signal,
+    });
     data = JSON.parse(new TextDecoder().decode(resp.body));
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Bedrock invocation failed";
     throw new Error(message);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   const text = data?.content?.[0]?.text;
