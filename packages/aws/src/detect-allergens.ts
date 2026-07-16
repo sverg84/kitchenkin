@@ -22,6 +22,12 @@ Rules:
 - Include each allowed value at most once. Sort the array alphabetically (A–Z) by string value.
 - Output raw JSON only: no markdown, no code fences, no text before or after the JSON.`;
 
+/**
+ * Removes an optional Markdown code fence from text and trims the result.
+ *
+ * @param text - The text that may be wrapped in a JSON or generic Markdown code fence
+ * @returns The trimmed inner text or the trimmed original text
+ */
 function stripMarkdownFences(text: string): string {
   const trimmed = text.trim();
   const fence = /^```(?:json)?\s*\n?([\s\S]*?)\n?```$/;
@@ -29,7 +35,12 @@ function stripMarkdownFences(text: string): string {
   return m ? m[1].trim() : trimmed;
 }
 
-/** Detect allergens for a recipe via Bedrock (Claude Haiku). */
+/**
+ * Detects the allergen categories present in a recipe using AWS Bedrock.
+ *
+ * @param input - The recipe title and ingredients to analyze
+ * @returns The validated allergen categories identified in the recipe
+ */
 export async function detectAllergens(
   input: Pick<UpdateRecipeInput, "title" | "ingredients">,
 ): Promise<AllergenLabel[]> {
