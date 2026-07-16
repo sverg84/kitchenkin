@@ -106,6 +106,11 @@ export async function updateRecipeForUser(
   return { id: recipe.id };
 }
 
+/**
+ * Deletes a recipe owned by the specified user and its associated image asset.
+ *
+ * @throws `ForbiddenError` if the recipe does not belong to the user.
+ */
 export async function deleteRecipeForUser(
   userId: string,
   recipeId: string,

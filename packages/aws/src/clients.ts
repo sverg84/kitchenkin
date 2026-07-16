@@ -12,6 +12,11 @@ import {
 let bedrockClient: BedrockRuntimeClient | undefined;
 let s3Client: S3Client | undefined;
 
+/**
+ * Provides the configured Bedrock Runtime client.
+ *
+ * @returns The cached Bedrock Runtime client
+ */
 export function getBedrockClient(): BedrockRuntimeClient {
   if (!bedrockClient) {
     bedrockClient = new BedrockRuntimeClient({
@@ -21,6 +26,11 @@ export function getBedrockClient(): BedrockRuntimeClient {
   return bedrockClient;
 }
 
+/**
+ * Provides the configured Amazon S3 client.
+ *
+ * @returns The cached Amazon S3 client
+ */
 export function getS3Client(): S3Client {
   if (!s3Client) {
     s3Client = new S3Client({

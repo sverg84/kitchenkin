@@ -17,6 +17,12 @@ type ImageHandlerInput = {
   encoded: string;
 };
 
+/**
+ * Retrieves the configured image upload endpoint.
+ *
+ * @returns The trimmed image upload endpoint.
+ * @throws If `IMAGE_UPLOAD_ENDPOINT` is missing or empty.
+ */
 function requireImageUploadEndpoint(): string {
   const endpoint = process.env.IMAGE_UPLOAD_ENDPOINT?.trim();
   if (!endpoint) {
@@ -25,7 +31,14 @@ function requireImageUploadEndpoint(): string {
   return endpoint;
 }
 
-/** Upload/convert image via Lambda Function URL; returns CloudFront id + src. */
+/**
+ * Uploads an image for processing and provides its hosted location.
+ *
+ * @param fileName - The name of the image file
+ * @param fileType - The image MIME type
+ * @param encoded - The encoded image data
+ * @returns The uploaded image's CloudFront identifier and source URL
+ */
 export async function imageCreateHandler({
   fileName,
   fileType,
