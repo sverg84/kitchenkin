@@ -2,16 +2,15 @@
 
 This directory contains repo-owned AWS Lambda handlers for KitchenKin.
 
-## Functions and Endpoint Mapping
+## App integration (current)
 
-| Function           | Package Folder             | Handler         | App Env Var                 |
-| ------------------ | -------------------------- | --------------- | --------------------------- |
-| Allergen detection | `lambda/detect-allergens/` | `index.handler` | `DETECT_ALLERGENS_ENDPOINT` |
-| Image upload       | `lambda/image-upload/`     | `index.handler` | `IMAGE_UPLOAD_ENDPOINT`     |
-| Image delete       | `lambda/image-delete/`     | `index.handler` | `IMAGE_DELETE_ENDPOINT`     |
+| Function           | Package Folder             | Handler         | Called by app? | App env / module |
+| ------------------ | -------------------------- | --------------- | -------------- | ---------------- |
+| Image upload       | `lambda/image-upload/`     | `index.handler` | **Yes**        | `IMAGE_UPLOAD_ENDPOINT` via [`packages/domain/src/integrations/lambda.ts`](../packages/domain/src/integrations/lambda.ts) |
+| Allergen detection | `lambda/detect-allergens/` | `index.handler` | **No** (rollback only) | Replaced by `@kk/aws` (`detectAllergens`) |
+| Image delete       | `lambda/image-delete/`     | `index.handler` | **No** (rollback only) | Replaced by `@kk/aws` (`deleteImageInS3`) |
 
-All three endpoint env vars are read by `src/lib/lambda/index.ts`.
-For each environment (local, staging, production), point those env vars to the corresponding Lambda Function URL (or API Gateway URL).
+`detect-allergens` and `image-delete` remain in this repo for rollback. The live app uses `@kk/aws` (Bedrock + S3 SDK) from `@kk/domain` recipe mutations. You can leave the Function URLs deployed until you are confident with the in-repo path; then decommission those two functions in AWS.
 
 **Image upload:** In AWS, attach the **`S3ImageProcessDeps`** Lambda layer (Node 22.x / x86_64); it provides **`sharp`** at runtime. This repo lists **`sharp`** under **`devDependencies`** so `bun run install:prod` omits it from the deployment zip. The **`bundle`** script passes **`--external:sharp`** so `bun run zip:bundle` inlines the S3 client but leaves `import "sharp"` to the layer. To run `lambda/image-upload/index.mjs` locally, use **`bun install`** (without `--production`) in that folder so `sharp` is installed.
 
@@ -28,10 +27,10 @@ See [Runtime-included SDK versions (Node.js)](https://docs.aws.amazon.com/lambda
 
 ### 1) Build a package
 
-Example for allergen detection (index-only zip):
+Example for image upload (index-only zip):
 
 ```bash
-cd "/Users/stephenvergara/Documents/GitHub/kitchenkin/lambda/detect-allergens"
+cd "/Users/stephenvergara/Documents/GitHub/kitchenkin/lambda/image-upload"
 bun run zip:index
 ```
 
@@ -42,18 +41,20 @@ bun run zip:index
 
 ```bash
 aws lambda update-function-code \
-  --function-name kitchenkin-detect-allergens \
+  --function-name kitchenkin-image-upload \
   --zip-file fileb://dist/function-index.zip
 ```
 
-Repeat for `image-upload` and `image-delete` with their function names and zip files.
+Repeat for rollback-only packages (`detect-allergens`, `image-delete`) only if you still need those Function URLs.
 
 ## IAM Notes
 
 - All functions: CloudWatch logs permissions (`logs:CreateLogGroup`, `logs:CreateLogStream`, `logs:PutLogEvents`).
-- `detect-allergens`: `bedrock:InvokeModel` on the selected model.
+- `detect-allergens` (rollback): `bedrock:InvokeModel` on the selected model.
 - `image-upload`: S3 permissions for listing and writing objects in the target bucket(s) (`s3:ListBucket`, `s3:PutObject`).
-- `image-delete`: S3 permissions for listing and deleting objects (`s3:ListBucket`, `s3:DeleteObject`).
+- `image-delete` (rollback): S3 permissions for listing and deleting objects (`s3:ListBucket`, `s3:DeleteObject`).
+
+For the Next.js app (`@kk/aws`), grant the dedicated IAM user the same Bedrock + S3 delete permissions; credentials live in `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` on Vercel / `apps/web/.env`.
 
 ## Out of Scope for Now
 
