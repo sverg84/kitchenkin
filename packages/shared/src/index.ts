@@ -1,3 +1,4 @@
+export * from "./allergens";
 export * from "./recipe-schemas";
 export * from "./api";
 export * from "./api-client";

@@ -1,5 +1,5 @@
 {
-  "name": "@kk/domain",
+  "name": "@kk/aws",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,8 +9,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@kk/aws": "workspace:*",
-    "@kk/db": "workspace:*",
+    "@aws-sdk/client-bedrock-runtime": "^3.1045.0",
+    "@aws-sdk/client-s3": "^3.1045.0",
     "@kk/shared": "workspace:*",
     "server-only": "^0.0.1"
   },

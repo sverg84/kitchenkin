@@ -7,7 +7,8 @@ import type {
 } from "@kk/shared";
 import { prisma } from "@kk/db";
 
-import { detectAllergens, deleteImageInS3 } from "../integrations/lambda";
+import { detectAllergens, deleteImageInS3 } from "@kk/aws";
+
 import { ForbiddenError } from "../auth/errors";
 
 const ingredientsInputToDbOperation = (ingredients: IngredientInput[]) => ({
@@ -109,17 +110,19 @@ export async function deleteRecipeForUser(
   userId: string,
   recipeId: string,
 ): Promise<void> {
-  await assertRecipeAuthor(recipeId, userId);
+  const existing = await prisma.recipe.findUnique({
+    where: { id: recipeId, authorId: userId },
+    select: { image: { select: { id: true } } },
+  });
+
+  if (!existing) {
+    throw new ForbiddenError("Not authorized to make changes to this recipe");
+  }
+
+  const imageHashId = existing.image?.id;
 
   await Promise.all([
-    deleteImageInS3(recipeId),
-    prisma.recipe.delete({
-      where: { id: recipeId },
-      include: {
-        category: true,
-        ingredients: true,
-        image: true,
-      },
-    }),
+    imageHashId ? deleteImageInS3(imageHashId) : Promise.resolve(),
+    prisma.recipe.delete({ where: { id: recipeId } }),
   ]);
 }

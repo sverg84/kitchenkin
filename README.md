@@ -10,10 +10,11 @@ apps/
   mobile/             # Expo SDK 55 — TanStack Query + REST against web /api
 packages/
   domain/             # @kk/domain — server-only Prisma services
+  aws/                # @kk/aws — Bedrock allergen detect + S3 image delete (server-only)
   shared/             # @kk/shared — Zod API schemas, api-client, query keys
   db/                 # Prisma
   auth/               # Better Auth
-lambda/               # AWS Lambda handlers (NOT a workspace member)
+lambda/               # AWS Lambda handlers (NOT a workspace member; image-upload active)
 ```
 
 REST API contract: [docs/api.md](docs/api.md).
@@ -62,7 +63,7 @@ cd apps/mobile && bunx expo start
 - **Mobile:** Expo SDK 55, TanStack Query, `@kk/shared` api-client → `{EXPO_PUBLIC_AUTH_ORIGIN}/api/*`.
 - **Data:** Prisma via `@kk/db`; business logic in `@kk/domain` (server-only).
 - **Auth:** Better Auth on web at `/api/auth/*` (`@kk/auth/next` with `nextCookies()`). Mobile uses `expoClient` + session cookie on REST requests.
-- **Lambdas:** image upload, allergen detection (see `lambda/`).
+- **AWS:** Allergen detection (Bedrock) and image delete (S3) via `@kk/aws` in the Next.js server. Image upload still uses a Lambda Function URL (`IMAGE_UPLOAD_ENDPOINT`).
 
 ## Mobile env
 
@@ -74,15 +75,23 @@ On simulator: `http://127.0.0.1:3000`. See [apps/mobile/README.md](apps/mobile/R
 
 ## Deploy
 
-Single Vercel project with **Root Directory** `apps/web`. Set `DATABASE_URL`, `AUTH_*`, `REDIS_URL`, and Lambda endpoint URLs on the web project.
+Single Vercel project with **Root Directory** `apps/web`. Set `DATABASE_URL`, `AUTH_*`, `REDIS_URL`, AWS credentials for `@kk/aws`, and `IMAGE_UPLOAD_ENDPOINT` on the web project.
+
+Use a dedicated IAM user (not root) with least privilege: `bedrock:InvokeModel` on the Haiku model in `us-west-2`, plus `s3:ListBucket` / `s3:DeleteObject` on `kitchenkin` and `kitchenkin-local`.
 
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_URL` | Prisma Postgres |
 | `AUTH_SECRET`, OAuth client IDs/secrets | Better Auth |
 | `REDIS_URL` | Session secondary storage |
-| `IMAGE_UPLOAD_ENDPOINT`, `IMAGE_DELETE_ENDPOINT`, `DETECT_ALLERGENS_ENDPOINT` | Lambda HTTP URLs |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | IAM user for Bedrock + S3 delete (via `@kk/aws`) |
+| `AWS_BEDROCK_REGION` | Optional; default `us-west-2` |
+| `AWS_S3_REGION` | Optional; default `us-west-1` |
+| `AWS_S3_BUCKET` | Optional; defaults to `kitchenkin-local` when `NODE_ENV=development`, else `kitchenkin` |
+| `IMAGE_UPLOAD_ENDPOINT` | Image-upload Lambda Function URL |
+
+`DETECT_ALLERGENS_ENDPOINT` and `IMAGE_DELETE_ENDPOINT` are no longer read by the app (logic moved to `@kk/aws`). Keep those Lambdas deployed only if you need rollback.
 
 OAuth redirects: `{origin}/api/auth/callback/google` and `/callback/reddit`.
 
-Lambdas are deployed manually ([lambda/README.md](lambda/README.md)).
+Image-upload Lambda is deployed manually ([lambda/README.md](lambda/README.md)).

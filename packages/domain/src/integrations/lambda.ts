@@ -1,8 +1,5 @@
 import "server-only";
 
-import type { Allergen } from "@kk/db";
-import type { UpdateRecipeInput } from "@kk/shared";
-
 const fileTypes = [
   "image/jpg",
   "image/jpeg",
@@ -10,8 +7,9 @@ const fileTypes = [
   "image/webp",
   "image/heic",
   "image/heif",
-];
-const validFileTypes = new Set(fileTypes);
+] as const;
+
+const validFileTypes = new Set<string>(fileTypes);
 
 type ImageHandlerInput = {
   fileName: string;
@@ -19,6 +17,15 @@ type ImageHandlerInput = {
   encoded: string;
 };
 
+function requireImageUploadEndpoint(): string {
+  const endpoint = process.env.IMAGE_UPLOAD_ENDPOINT?.trim();
+  if (!endpoint) {
+    throw new Error("Missing required env: IMAGE_UPLOAD_ENDPOINT");
+  }
+  return endpoint;
+}
+
+/** Upload/convert image via Lambda Function URL; returns CloudFront id + src. */
 export async function imageCreateHandler({
   fileName,
   fileType,
@@ -28,7 +35,7 @@ export async function imageCreateHandler({
     throw new Error(`File must be an image of type: ${fileTypes.join(", ")}`);
   }
 
-  const imageResponse = await fetch(process.env.IMAGE_UPLOAD_ENDPOINT!, {
+  const imageResponse = await fetch(requireImageUploadEndpoint(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -47,36 +54,4 @@ export async function imageCreateHandler({
   }
 
   return await imageResponse.json();
-}
-
-export async function deleteImageInS3(id: string) {
-  await fetch(process.env.IMAGE_DELETE_ENDPOINT!, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-env": process.env.NODE_ENV ?? "development",
-    },
-    body: JSON.stringify({ id }),
-  });
-}
-
-export async function detectAllergens(
-  input: Pick<UpdateRecipeInput, "title" | "ingredients">,
-): Promise<Allergen[]> {
-  const response = await fetch(process.env.DETECT_ALLERGENS_ENDPOINT!, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-  });
-
-  if (!response.ok) {
-    const { message } = await response.json();
-    throw new Error(message);
-  }
-
-  const { allergens } = await response.json();
-
-  return allergens as Allergen[];
 }
