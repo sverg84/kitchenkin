@@ -35,23 +35,35 @@ export async function imageCreateHandler({
     throw new Error(`File must be an image of type: ${fileTypes.join(", ")}`);
   }
 
-  const imageResponse = await fetch(requireImageUploadEndpoint(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-env": process.env.NODE_ENV ?? "development",
-    },
-    body: JSON.stringify({
-      fileName,
-      fileType,
-      image: encoded,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60_000);
+  try {
+    const imageResponse = await fetch(requireImageUploadEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-env": process.env.NODE_ENV ?? "development",
+      },
+      body: JSON.stringify({
+        fileName,
+        fileType,
+        image: encoded,
+      }),
+      signal: controller.signal,
+    });
 
-  if (!imageResponse.ok) {
-    const { message } = await imageResponse.json();
-    throw new Error(message);
+    if (!imageResponse.ok) {
+      const { message } = await imageResponse.json();
+      throw new Error(message);
+    }
+
+    return await imageResponse.json();
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Image upload timed out");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return await imageResponse.json();
 }

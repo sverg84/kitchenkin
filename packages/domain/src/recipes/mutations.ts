@@ -121,9 +121,11 @@ export async function deleteRecipeForUser(
 
   const imageHashId = existing.image?.id;
 
-  await prisma.recipe.delete({ where: { id: recipeId } });
-
+  // Clean up S3 before removing the recipe so failed cleanup can be retried
+  // on a later delete attempt while the recipe (and image hash) still exist.
   if (imageHashId) {
     await deleteImageInS3(imageHashId);
   }
+
+  await prisma.recipe.delete({ where: { id: recipeId } });
 }

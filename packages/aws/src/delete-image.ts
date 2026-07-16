@@ -10,7 +10,8 @@ import { getS3Bucket } from "./env";
 
 /**
  * Delete the first S3 object whose key is prefixed by the image content hash.
- * Propagates failures so callers can retry cleanup after the DB delete.
+ * Propagates failures so callers can retry while the recipe still exists.
+ * Missing objects are treated as success (idempotent for retries).
  */
 export async function deleteImageInS3(imageHashId: string): Promise<void> {
   const bucket = getS3Bucket();
