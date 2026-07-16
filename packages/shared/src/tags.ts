@@ -50,6 +50,20 @@ export function formatRecipeTagLabel(tag: RecipeTagLabel): string {
   return TAG_DISPLAY_LABELS[tag];
 }
 
+/** Input tags array: allowlist values only, duplicates removed (first wins). */
+export const recipeTagsInputSchema = z
+  .array(recipeTagSchema)
+  .transform((tags): RecipeTagLabel[] => {
+    const seen = new Set<string>();
+    const out: RecipeTagLabel[] = [];
+    for (const tag of tags) {
+      if (seen.has(tag)) continue;
+      seen.add(tag);
+      out.push(tag);
+    }
+    return out;
+  });
+
 /**
  * Bedrock tags JSON: requires `{ tags: unknown[] }`, then filters to known
  * enum values, dedupes, and sorts (lenient — ignores hallucinated labels).

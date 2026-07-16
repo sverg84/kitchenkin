@@ -104,7 +104,9 @@ export async function updateRecipeForUser(
   if (
     inputTags !== undefined &&
     inputTags.length === 0 &&
-    (!detectInput.title || !detectInput.ingredients)
+    (!detectInput.title ||
+      !detectInput.description ||
+      !detectInput.ingredients)
   ) {
     const existing = await prisma.recipe.findUniqueOrThrow({
       where: { id },

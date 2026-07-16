@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { recipeTagSchema } from "./tags";
+import { recipeTagsInputSchema } from "./tags";
 
 // Recipe prep/cook time is stored as "<n> min" or "<n> minutes".
 export const recipeTimePattern = /^\d+\s?(min|minutes)$/;
@@ -55,7 +55,7 @@ export const recipeInputBaseSchema = z.strictObject({
   prepTime: z.string().trim().regex(recipeTimePattern),
   cookTime: z.string().trim().regex(recipeTimePattern),
   servings: z.coerce.number().int().gt(0),
-  tags: z.array(recipeTagSchema),
+  tags: recipeTagsInputSchema,
   instructions: z.array(z.string().trim().nonempty()),
   image: imageInputSchema.optional(),
   ingredients: ingredientInputSchema.array(),
@@ -63,7 +63,7 @@ export const recipeInputBaseSchema = z.strictObject({
 
 /** Server-action payload for creating a recipe (no `type` discriminator). */
 export const createRecipeInputSchema = recipeInputBaseSchema.extend({
-  tags: z.array(recipeTagSchema).default([]),
+  tags: recipeTagsInputSchema.default([]),
 });
 
 
