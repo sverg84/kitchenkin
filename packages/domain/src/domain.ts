@@ -11,11 +11,7 @@ export {
 } from "./recipes/mutations";
 export { toggleFavorite } from "./recipes/toggle-favorite";
 export { listCategories } from "./categories/list-categories";
-export {
-  imageCreateHandler,
-  detectAllergens,
-  deleteImageInS3,
-} from "./integrations/lambda";
+export { imageCreateHandler } from "./integrations/lambda";
 export {
   UnauthorizedError,
   ForbiddenError,

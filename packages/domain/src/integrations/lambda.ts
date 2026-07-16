@@ -1,8 +1,5 @@
 import "server-only";
 
-import type { Allergen } from "@kk/db";
-import type { UpdateRecipeInput } from "@kk/shared";
-
 const fileTypes = [
   "image/jpg",
   "image/jpeg",
@@ -10,8 +7,9 @@ const fileTypes = [
   "image/webp",
   "image/heic",
   "image/heif",
-];
-const validFileTypes = new Set(fileTypes);
+] as const;
+
+const validFileTypes = new Set<string>(fileTypes);
 
 type ImageHandlerInput = {
   fileName: string;
@@ -19,6 +17,28 @@ type ImageHandlerInput = {
   encoded: string;
 };
 
+/**
+ * Retrieves the configured image upload endpoint.
+ *
+ * @returns The trimmed image upload endpoint.
+ * @throws If `IMAGE_UPLOAD_ENDPOINT` is missing or empty.
+ */
+function requireImageUploadEndpoint(): string {
+  const endpoint = process.env.IMAGE_UPLOAD_ENDPOINT?.trim();
+  if (!endpoint) {
+    throw new Error("Missing required env: IMAGE_UPLOAD_ENDPOINT");
+  }
+  return endpoint;
+}
+
+/**
+ * Uploads an image for processing and provides its hosted location.
+ *
+ * @param fileName - The name of the image file
+ * @param fileType - The image MIME type
+ * @param encoded - The encoded image data
+ * @returns The uploaded image's CloudFront identifier and source URL
+ */
 export async function imageCreateHandler({
   fileName,
   fileType,
@@ -28,55 +48,35 @@ export async function imageCreateHandler({
     throw new Error(`File must be an image of type: ${fileTypes.join(", ")}`);
   }
 
-  const imageResponse = await fetch(process.env.IMAGE_UPLOAD_ENDPOINT!, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-env": process.env.NODE_ENV ?? "development",
-    },
-    body: JSON.stringify({
-      fileName,
-      fileType,
-      image: encoded,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60_000);
+  try {
+    const imageResponse = await fetch(requireImageUploadEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-env": process.env.NODE_ENV ?? "development",
+      },
+      body: JSON.stringify({
+        fileName,
+        fileType,
+        image: encoded,
+      }),
+      signal: controller.signal,
+    });
 
-  if (!imageResponse.ok) {
-    const { message } = await imageResponse.json();
-    throw new Error(message);
+    if (!imageResponse.ok) {
+      const { message } = await imageResponse.json();
+      throw new Error(message);
+    }
+
+    return await imageResponse.json();
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Image upload timed out");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return await imageResponse.json();
-}
-
-export async function deleteImageInS3(id: string) {
-  await fetch(process.env.IMAGE_DELETE_ENDPOINT!, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-env": process.env.NODE_ENV ?? "development",
-    },
-    body: JSON.stringify({ id }),
-  });
-}
-
-export async function detectAllergens(
-  input: Pick<UpdateRecipeInput, "title" | "ingredients">,
-): Promise<Allergen[]> {
-  const response = await fetch(process.env.DETECT_ALLERGENS_ENDPOINT!, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-  });
-
-  if (!response.ok) {
-    const { message } = await response.json();
-    throw new Error(message);
-  }
-
-  const { allergens } = await response.json();
-
-  return allergens as Allergen[];
 }

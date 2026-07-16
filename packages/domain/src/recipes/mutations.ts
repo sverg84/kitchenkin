@@ -7,7 +7,8 @@ import type {
 } from "@kk/shared";
 import { prisma } from "@kk/db";
 
-import { detectAllergens, deleteImageInS3 } from "../integrations/lambda";
+import { detectAllergens, deleteImageInS3 } from "@kk/aws";
+
 import { ForbiddenError } from "../auth/errors";
 
 const ingredientsInputToDbOperation = (ingredients: IngredientInput[]) => ({
@@ -105,21 +106,31 @@ export async function updateRecipeForUser(
   return { id: recipe.id };
 }
 
+/**
+ * Deletes a recipe owned by the specified user and its associated image asset.
+ *
+ * @throws `ForbiddenError` if the recipe does not belong to the user.
+ */
 export async function deleteRecipeForUser(
   userId: string,
   recipeId: string,
 ): Promise<void> {
-  await assertRecipeAuthor(recipeId, userId);
+  const existing = await prisma.recipe.findUnique({
+    where: { id: recipeId, authorId: userId },
+    select: { image: { select: { id: true } } },
+  });
 
-  await Promise.all([
-    deleteImageInS3(recipeId),
-    prisma.recipe.delete({
-      where: { id: recipeId },
-      include: {
-        category: true,
-        ingredients: true,
-        image: true,
-      },
-    }),
-  ]);
+  if (!existing) {
+    throw new ForbiddenError("Not authorized to make changes to this recipe");
+  }
+
+  const imageHashId = existing.image?.id;
+
+  // Clean up S3 before removing the recipe so failed cleanup can be retried
+  // on a later delete attempt while the recipe (and image hash) still exist.
+  if (imageHashId) {
+    await deleteImageInS3(imageHashId);
+  }
+
+  await prisma.recipe.delete({ where: { id: recipeId } });
 }

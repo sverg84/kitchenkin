@@ -1,18 +1,7 @@
 import { z } from "zod";
 
+import { allergenSchema } from "../allergens";
 import { connectionSchema } from "./pagination";
-
-const allergenSchema = z.enum([
-  "Dairy",
-  "Eggs",
-  "Fish",
-  "Peanuts",
-  "Sesame",
-  "Shellfish",
-  "Soy",
-  "TreeNuts",
-  "Wheat",
-]);
 
 export const categoryDtoSchema = z.object({
   id: z.string(),
