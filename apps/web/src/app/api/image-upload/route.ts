@@ -1,4 +1,5 @@
 import { imageCreateHandler } from "@kk/domain";
+import { apiErrorCodes } from "@kk/shared";
 import { NextRequest } from "next/server";
 
 import { requireUserId } from "@/lib/api/route-handler";
@@ -13,10 +14,10 @@ export async function POST(req: NextRequest) {
     await requireUserId();
 
     const data = await req.formData();
-    const image = data.get("image") as File | null;
+    const image = data.get("image");
 
-    if (!image) {
-      return jsonError("No image provided", 400);
+    if (!(image instanceof File)) {
+      return jsonError("No image provided", 400, apiErrorCodes.BAD_REQUEST);
     }
 
     const encoded = Buffer.from(await image.arrayBuffer()).toString("base64");
@@ -29,6 +30,12 @@ export async function POST(req: NextRequest) {
 
     return jsonResponse(lambdaResponse);
   } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.startsWith("File must be an image of type:")
+    ) {
+      return jsonError(error.message, 400, apiErrorCodes.BAD_REQUEST);
+    }
     return handleDomainError(error);
   }
 }
