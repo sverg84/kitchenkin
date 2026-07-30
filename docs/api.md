@@ -44,6 +44,8 @@ Public recipe search/list.
 | `after` | string | — | Cursor from previous page |
 | `search` | string | — | Case-insensitive title/description filter |
 
+When a session is present, each node includes `isFavorited` for the current user; anonymous responses use `isFavorited: false`.
+
 **Response:** `RecipeConnection` (see Zod `recipeConnectionSchema` in `@kk/shared`).
 
 ### `GET /api/recipes/mine`
@@ -64,7 +66,7 @@ Authenticated user's favorited recipes. **401** if no session.
 
 ### `GET /api/recipes/:id`
 
-Public recipe detail.
+Public recipe detail. When a session is present, `isFavorited` reflects the current user; otherwise `false`.
 
 **Response:** `RecipeDTO`  
 **404:** `{ "error": "Recipe not found", "code": "NOT_FOUND" }`
@@ -95,7 +97,7 @@ Delete recipe (mobile). **401** / **403** if not author.
 
 Toggle favorite for current user. **401** if no session.
 
-**Response:** `{ "favorited": boolean }`
+**Response:** `{ "favorited": boolean }` (Zod `toggleFavoriteResponseSchema`)
 
 ### `POST /api/image-upload`
 
@@ -105,8 +107,9 @@ Unchanged — Lambda proxy for recipe form image upload (not part of GraphQL mig
 
 Zod schemas and inferred TypeScript types live in `packages/shared/src/api/`. Key exports:
 
-- `RecipeDTO` — list card + detail fields (includes `tags: RecipeTag[]`)
+- `RecipeDTO` — list card + detail fields (includes `tags: RecipeTag[]`, `isFavorited: boolean`)
 - `RecipeConnection`
+- `toggleFavoriteResponseSchema`
 - `paginationQuerySchema`
 - `recipeTagSchema` / `RECIPE_TAG_LABELS` — closed tag allowlist
 
