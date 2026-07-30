@@ -7,7 +7,10 @@ import {
   listRecipes,
 } from "@kk/domain";
 
-import { requireUserId } from "@/lib/api/route-handler";
+import {
+  getOptionalUserId,
+  requireUserId,
+} from "@/lib/api/route-handler";
 import {
   handleDomainError,
   jsonResponse,
@@ -22,7 +25,8 @@ export async function GET(request: Request) {
       search: searchParams.get("search") ?? undefined,
     });
 
-    const connection = await listRecipes(query);
+    const viewerUserId = await getOptionalUserId();
+    const connection = await listRecipes({ ...query, viewerUserId });
     return jsonResponse(connection);
   } catch (error) {
     return handleDomainError(error);

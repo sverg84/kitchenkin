@@ -22,7 +22,37 @@ export type RecipeDetailRecord = Prisma.RecipeGetPayload<{
   select: typeof recipeDetailSelect;
 }>;
 
-export function mapRecipeToDto(recipe: RecipeDetailRecord): RecipeDTO {
+export type RecipeDetailWithFavorite = RecipeDetailRecord & {
+  favoritedBy?: { id: string }[];
+};
+
+/**
+ * Select for recipe reads. When `viewerUserId` is set, includes a filtered
+ * `favoritedBy` relation (at most one row) for `isFavorited`.
+ */
+export function recipeSelectWithViewer(viewerUserId?: string | null) {
+  if (!viewerUserId) {
+    return recipeDetailSelect;
+  }
+
+  return {
+    ...recipeDetailSelect,
+    favoritedBy: {
+      where: { id: viewerUserId },
+      select: { id: true },
+      take: 1,
+    },
+  } satisfies Prisma.RecipeSelect;
+}
+
+export function mapRecipeToDto(
+  recipe: RecipeDetailWithFavorite,
+  options?: { isFavorited?: boolean },
+): RecipeDTO {
+  const isFavorited =
+    options?.isFavorited ??
+    (Array.isArray(recipe.favoritedBy) ? recipe.favoritedBy.length > 0 : false);
+
   return {
     id: recipe.id,
     title: recipe.title,
@@ -36,5 +66,6 @@ export function mapRecipeToDto(recipe: RecipeDetailRecord): RecipeDTO {
     image: recipe.image ?? null,
     author: recipe.author,
     ingredients: recipe.ingredients,
+    isFavorited,
   };
 }

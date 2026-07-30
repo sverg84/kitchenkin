@@ -8,7 +8,10 @@ import {
   updateRecipeForUser,
 } from "@kk/domain";
 
-import { requireUserId } from "@/lib/api/route-handler";
+import {
+  getOptionalUserId,
+  requireUserId,
+} from "@/lib/api/route-handler";
 import {
   handleDomainError,
   jsonError,
@@ -20,7 +23,8 @@ type RouteContext = { params: Promise<{ id: string }> };
 export async function GET(_request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const recipe = await getRecipeById(id);
+    const viewerUserId = await getOptionalUserId();
+    const recipe = await getRecipeById(id, viewerUserId);
 
     if (!recipe) {
       return jsonError("Recipe not found", 404, apiErrorCodes.NOT_FOUND);
