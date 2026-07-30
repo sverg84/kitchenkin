@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { RecipeDeleteDialogButtons } from "@/components/recipe/delete-dialog-buttons";
+import { FavoriteButton } from "@/components/recipe/favorite-button";
 import { Suspense } from "react";
 import { RecipeDetailFallback } from "@/components/suspense-fallbacks/recipe-detail-fallback";
 
@@ -39,11 +40,14 @@ async function RecipePageContent({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [recipe, session] = await Promise.all([getRecipeById(id), auth()]);
+  const session = await auth();
+  const recipe = await getRecipeById(id, session?.user?.id);
 
   if (!recipe) {
     notFound();
   }
+
+  const isAuthor = session?.user?.id === recipe.author.id;
 
   return (
     <main className="mx-auto px-4 py-8 max-w-7xl">
@@ -58,32 +62,38 @@ async function RecipePageContent({
           <div className="relative aspect-video rounded-lg overflow-hidden">
             <RecipeImage recipe={recipe} priority={true} />
           </div>
-          {session?.user?.id === recipe.author.id && (
-            <div className="self-center flex gap-x-2">
-              <Link href={`/recipe/${recipe.id}/edit`}>
-                <Button variant="secondary">
-                  <label>Edit</label>
-                  <Edit />
-                </Button>
-              </Link>
-              <Dialog>
-                <DialogTrigger asChild={true}>
-                  <Button variant="destructive">
-                    <Trash2 />
+          <div className="self-center flex gap-x-2">
+            <FavoriteButton
+              recipeId={recipe.id}
+              initialFavorited={recipe.isFavorited}
+            />
+            {isAuthor ? (
+              <>
+                <Link href={`/recipe/${recipe.id}/edit`}>
+                  <Button variant="secondary">
+                    <label>Edit</label>
+                    <Edit />
                   </Button>
-                </DialogTrigger>
-                <DialogContent showCloseButton={false}>
-                  <DialogHeader>
-                    <DialogTitle>Are you sure?</DialogTitle>
-                  </DialogHeader>
-                  This cannot be undone.
-                  <DialogFooter>
-                    <RecipeDeleteDialogButtons recipeId={recipe.id} />
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
+                </Link>
+                <Dialog>
+                  <DialogTrigger asChild={true}>
+                    <Button variant="destructive">
+                      <Trash2 />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent showCloseButton={false}>
+                    <DialogHeader>
+                      <DialogTitle>Are you sure?</DialogTitle>
+                    </DialogHeader>
+                    This cannot be undone.
+                    <DialogFooter>
+                      <RecipeDeleteDialogButtons recipeId={recipe.id} />
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
+            ) : null}
+          </div>
         </div>
         <div>
           <h1 className="text-3xl font-bold">{recipe.title}</h1>

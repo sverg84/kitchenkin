@@ -6,49 +6,68 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
+import Link from "next/link";
 import { formatRecipeTagLabel, type RecipeDTO } from "@kk/shared";
 import { RecipeImage } from "../recipe-image";
+import { FavoriteButton } from "../favorite-button";
 
 interface RecipeCardProps {
   recipe: Pick<
     RecipeDTO,
-    "id" | "title" | "description" | "prepTime" | "cookTime" | "tags" | "image"
+    | "id"
+    | "title"
+    | "description"
+    | "prepTime"
+    | "cookTime"
+    | "tags"
+    | "image"
+    | "isFavorited"
   >;
 }
 
 export function RecipeCard({ recipe }: RecipeCardProps) {
   return (
-    <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative aspect-video">
-        <RecipeImage recipe={recipe} />
+    <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow relative">
+      <div className="absolute top-2 right-2 z-10">
+        <FavoriteButton
+          recipeId={recipe.id}
+          initialFavorited={recipe.isFavorited}
+          size="icon"
+          className="bg-background/90 shadow-sm"
+        />
       </div>
-      <CardHeader>
-        <h3 className="text-lg font-semibold">{recipe.title}</h3>
-        {recipe.tags.length > 0 ? (
-          <ul className="mt-2 flex flex-wrap gap-1.5">
-            {recipe.tags.map((tag) => (
-              <li key={tag}>
-                <Badge>{formatRecipeTagLabel(tag)}</Badge>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground line-clamp-2">
-          {recipe.description}
-        </p>
-      </CardContent>
-      <CardFooter className="flex justify-between text-sm text-muted-foreground">
-        <div className="flex items-center">
-          <Clock className="size-4 mr-1" />
-          <span>Prep: {recipe.prepTime}</span>
+      <Link href={`/recipe/${recipe.id}`} className="block h-full">
+        <div className="relative aspect-video">
+          <RecipeImage recipe={recipe} />
         </div>
-        <div className="flex items-center">
-          <Clock className="size-4 mr-1" />
-          <span>Cook: {recipe.cookTime}</span>
-        </div>
-      </CardFooter>
+        <CardHeader>
+          <h3 className="text-lg font-semibold">{recipe.title}</h3>
+          {recipe.tags.length > 0 ? (
+            <ul className="mt-2 flex flex-wrap gap-1.5">
+              {recipe.tags.map((tag) => (
+                <li key={tag}>
+                  <Badge>{formatRecipeTagLabel(tag)}</Badge>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground line-clamp-2">
+            {recipe.description}
+          </p>
+        </CardContent>
+        <CardFooter className="flex justify-between text-sm text-muted-foreground">
+          <div className="flex items-center">
+            <Clock className="size-4 mr-1" />
+            <span>Prep: {recipe.prepTime}</span>
+          </div>
+          <div className="flex items-center">
+            <Clock className="size-4 mr-1" />
+            <span>Cook: {recipe.cookTime}</span>
+          </div>
+        </CardFooter>
+      </Link>
     </Card>
   );
 }

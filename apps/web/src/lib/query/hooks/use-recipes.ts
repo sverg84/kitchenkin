@@ -1,9 +1,14 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   queryKeys,
   type RecipeConnection,
+  type ToggleFavoriteResponse,
   webApiClient,
 } from "@kk/shared";
 
@@ -56,5 +61,25 @@ export function useFavoriteRecipes() {
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) =>
       lastPage.pageInfo.hasNextPage ? lastPage.pageInfo.endCursor : undefined,
+  });
+}
+
+export function useToggleFavorite() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (recipeId: string) => {
+      return webApiClient.post<ToggleFavoriteResponse>(
+        `/api/recipes/${recipeId}/favorite`,
+      );
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.recipes.favorites(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.recipes.all,
+      });
+    },
   });
 }

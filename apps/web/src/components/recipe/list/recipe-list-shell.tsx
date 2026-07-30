@@ -1,20 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef } from "react";
 import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query";
-import type { RecipeConnection, RecipeDTO } from "@kk/shared";
+import type { RecipeConnection } from "@kk/shared";
 
 import RecipeSkeletonList from "./recipe-skeleton-list";
 import { RecipeCard } from "./recipe-card";
-
-function RecipeLink({ recipe }: { recipe: RecipeDTO }) {
-  return (
-    <Link href={`/recipe/${recipe.id}`}>
-      <RecipeCard recipe={recipe} />
-    </Link>
-  );
-}
 
 type RecipeInfiniteQueryResult = Pick<
   UseInfiniteQueryResult<InfiniteData<RecipeConnection>>,
@@ -78,7 +69,7 @@ export function RecipeListShell({
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {recipes.map((recipe) => (
-          <RecipeLink key={recipe.id} recipe={recipe} />
+          <RecipeCard key={recipe.id} recipe={recipe} />
         ))}
       </div>
       {isFetchingNextPage && <RecipeSkeletonList className="mt-6" />}
