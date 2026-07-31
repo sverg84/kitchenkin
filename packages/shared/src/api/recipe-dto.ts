@@ -71,10 +71,14 @@ export const recipesListQuerySchema = z.object({
 
 export type RecipesListQuery = z.infer<typeof recipesListQuerySchema>;
 
-export const toggleFavoriteResponseSchema = z.object({
+export const setFavoriteBodySchema = z.object({
   favorited: z.boolean(),
 });
 
-export type ToggleFavoriteResponse = z.infer<
-  typeof toggleFavoriteResponseSchema
->;
+export type SetFavoriteBody = z.infer<typeof setFavoriteBodySchema>;
+
+export const setFavoriteResponseSchema = z.object({
+  favorited: z.boolean(),
+});
+
+export type SetFavoriteResponse = z.infer<typeof setFavoriteResponseSchema>;

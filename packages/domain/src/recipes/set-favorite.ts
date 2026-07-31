@@ -2,9 +2,16 @@ import "server-only";
 
 import { prisma } from "@kk/db";
 
-export async function toggleFavorite(
+/**
+ * Sets whether the user has favorited a recipe (idempotent).
+ *
+ * @returns The resulting favorited state after the operation.
+ * @throws Error with message "Recipe not found" when the recipe does not exist.
+ */
+export async function setFavorite(
   userId: string,
   recipeId: string,
+  favorited: boolean,
 ): Promise<{ favorited: boolean }> {
   const recipe = await prisma.recipe.findUnique({
     where: { id: recipeId },
@@ -23,22 +30,26 @@ export async function toggleFavorite(
 
   const isFavorited = recipe.favoritedBy.length > 0;
 
-  if (isFavorited) {
+  if (favorited === isFavorited) {
+    return { favorited };
+  }
+
+  if (favorited) {
     await prisma.recipe.update({
       where: { id: recipeId },
       data: {
-        favoritedBy: { disconnect: { id: userId } },
+        favoritedBy: { connect: { id: userId } },
       },
     });
-    return { favorited: false };
+    return { favorited: true };
   }
 
   await prisma.recipe.update({
     where: { id: recipeId },
     data: {
-      favoritedBy: { connect: { id: userId } },
+      favoritedBy: { disconnect: { id: userId } },
     },
   });
 
-  return { favorited: true };
+  return { favorited: false };
 }

@@ -95,9 +95,11 @@ Delete recipe (mobile). **401** / **403** if not author.
 
 ### `POST /api/recipes/:id/favorite`
 
-Toggle favorite for current user. **401** if no session.
+Set favorite state for current user (idempotent). **401** if no session. **400** if body is missing or invalid.
 
-**Response:** `{ "favorited": boolean }` (Zod `toggleFavoriteResponseSchema`)
+**Body:** `{ "favorited": boolean }` (Zod `setFavoriteBodySchema`)
+
+**Response:** `{ "favorited": boolean }` (Zod `setFavoriteResponseSchema`) — resulting state after the operation. Already-in-desired-state is a no-op that still returns that state.
 
 ### `POST /api/image-upload`
 
@@ -115,7 +117,7 @@ Zod schemas and inferred TypeScript types live in `packages/shared/src/api/`. Ke
 
 - `RecipeDTO` — list card + detail fields (includes `tags: RecipeTag[]`, `isFavorited: boolean`)
 - `RecipeConnection`
-- `toggleFavoriteResponseSchema`
+- `setFavoriteBodySchema` / `setFavoriteResponseSchema`
 - `paginationQuerySchema`
 - `recipeTagSchema` / `RECIPE_TAG_LABELS` — closed tag allowlist
 

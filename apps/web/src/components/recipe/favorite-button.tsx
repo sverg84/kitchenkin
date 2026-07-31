@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth/auth-client";
-import { useToggleFavorite } from "@/lib/query/hooks/use-recipes";
+import { subscribeFavoriteChange } from "@/lib/query/favorite-sync";
+import { useSetFavorite } from "@/lib/query/hooks/use-recipes";
 import { cn } from "@/lib/utils";
 
 interface FavoriteButtonProps {
@@ -25,11 +26,23 @@ export function FavoriteButton({
 }: FavoriteButtonProps) {
   const { data: session, isPending } = authClient.useSession();
   const [favorited, setFavorited] = useState(initialFavorited);
-  const toggleFavorite = useToggleFavorite();
+  const [prevInitialFavorited, setPrevInitialFavorited] =
+    useState(initialFavorited);
+  const setFavorite = useSetFavorite();
+
+  // Sync from list/query cache updates without an effect (avoids cascading renders).
+  if (initialFavorited !== prevInitialFavorited) {
+    setPrevInitialFavorited(initialFavorited);
+    setFavorited(initialFavorited);
+  }
 
   useEffect(() => {
-    setFavorited(initialFavorited);
-  }, [initialFavorited]);
+    return subscribeFavoriteChange((message) => {
+      if (message.recipeId === recipeId) {
+        setFavorited(message.favorited);
+      }
+    });
+  }, [recipeId]);
 
   if (isPending) {
     return (
@@ -73,22 +86,26 @@ export function FavoriteButton({
       variant="outline"
       size={size === "icon" ? "icon" : "default"}
       className={cn(className)}
-      disabled={toggleFavorite.isPending}
+      disabled={setFavorite.isPending}
       aria-pressed={favorited}
       aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
         const previous = favorited;
-        setFavorited(!previous);
-        toggleFavorite.mutate(recipeId, {
-          onSuccess: (result) => {
-            setFavorited(result.favorited);
+        const next = !previous;
+        setFavorited(next);
+        setFavorite.mutate(
+          { recipeId, favorited: next },
+          {
+            onSuccess: (result) => {
+              setFavorited(result.favorited);
+            },
+            onError: () => {
+              setFavorited(previous);
+            },
           },
-          onError: () => {
-            setFavorited(previous);
-          },
-        });
+        );
       }}
     >
       <Heart
