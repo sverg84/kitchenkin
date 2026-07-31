@@ -6,7 +6,7 @@ import { Providers } from "@/app/providers";
 import { UserMenu } from "@/components/auth/user-menu";
 import Link from "next/link";
 import NextTopLoader from "nextjs-toploader";
-import BrandLink from "./brand";
+import Brand from "./brand";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -30,12 +30,13 @@ export default function RootLayout({
           <NextTopLoader color="#ff7b54" height={6} showSpinner={false} />
           <header className="border-b">
             <div className="mx-auto flex items-center justify-between px-4 py-4 max-w-7xl">
-              <div className="flex gap-x-2 items-center">
-                <BrandLink />
-                <Link href="/" className="text-2xl font-bold">
-                  KitchenKin
-                </Link>
-              </div>
+              <Link
+                href="/"
+                className="flex gap-x-2 items-center text-2xl font-bold"
+              >
+                <Brand />
+                KitchenKin
+              </Link>
               <UserMenu />
             </div>
           </header>
