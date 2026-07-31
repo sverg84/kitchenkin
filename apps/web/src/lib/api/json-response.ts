@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unstable_rethrow } from "next/navigation";
 
 import {
   apiErrorCodes,
@@ -24,6 +25,9 @@ export function jsonError(
 }
 
 export function handleDomainError(error: unknown) {
+  // Cache Components / PPR bailouts must not become API 500s.
+  unstable_rethrow(error);
+
   if (error instanceof UnauthorizedError) {
     return jsonError(error.message, 401, apiErrorCodes.UNAUTHORIZED);
   }
