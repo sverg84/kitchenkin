@@ -16,7 +16,18 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const userId = await requireUserId(request);
     const { id } = await context.params;
-    const body = await request.json();
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return jsonError(
+        "Invalid request body",
+        400,
+        apiErrorCodes.INVALID_REQUEST_BODY,
+      );
+    }
+
     const { favorited } = setFavoriteBodySchema.parse(body);
     const result = await setFavorite(userId, id, favorited);
     return jsonResponse(result);
