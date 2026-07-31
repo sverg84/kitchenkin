@@ -38,7 +38,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireUserId(request);
     const { id } = await context.params;
     const body = await request.json();
     const input = updateRecipeInputSchema.parse({ ...body, id });
@@ -49,9 +49,9 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireUserId(request);
     const { id } = await context.params;
     await deleteRecipeForUser(userId, id);
     return jsonResponse({ success: true });

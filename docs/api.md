@@ -101,7 +101,13 @@ Toggle favorite for current user. **401** if no session.
 
 ### `POST /api/image-upload`
 
-Unchanged — Lambda proxy for recipe form image upload (not part of GraphQL migration).
+Authenticated Lambda proxy for recipe form image upload. **401** if no session.
+
+| Body | `multipart/form-data` with field `image` (file) |
+| Response | `{ "id": string, "src": string }` (Lambda WebP + CloudFront URL) |
+| Errors | **400** if `image` missing; **401** without session |
+
+The Lambda Function URL itself stays unauthenticated; this Next.js route is the auth gate.
 
 ## Types
 

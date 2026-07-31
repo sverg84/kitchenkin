@@ -6,7 +6,7 @@ import { handleDomainError, jsonResponse } from "@/lib/api/json-response";
 
 export async function GET(request: Request) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireUserId(request);
     const { searchParams } = new URL(request.url);
     const query = paginationQuerySchema.parse({
       first: searchParams.get("first") ?? undefined,
