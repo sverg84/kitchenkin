@@ -7,9 +7,13 @@ import {
   decodeRecipeCursor,
   encodeRecipeCursor,
 } from "./cursor";
-import { mapRecipeToDto, recipeDetailSelect, type RecipeDetailRecord } from "./recipe-select";
+import {
+  mapRecipeToDto,
+  recipeSelectWithViewer,
+  type RecipeDetailWithFavorite,
+} from "./recipe-select";
 
-type RecipePageRecord = RecipeDetailRecord & { createdAt: Date };
+type RecipePageRecord = RecipeDetailWithFavorite & { createdAt: Date };
 
 function recipeSearchWhere(
   search?: string | null,
@@ -27,6 +31,7 @@ function buildRecipeConnection(
   recipes: RecipePageRecord[],
   take: number,
   after: string | null | undefined,
+  options?: { forceFavorited?: boolean },
 ): RecipeConnection {
   const hasPreviousPage = Boolean(after);
   const hasNextPage = recipes.length > take;
@@ -59,14 +64,24 @@ function buildRecipeConnection(
         createdAt: recipe.createdAt.toISOString(),
         id: recipe.id,
       }),
-      node: mapRecipeToDto(recipe),
+      node: mapRecipeToDto(recipe, {
+        isFavorited: options?.forceFavorited ? true : undefined,
+      }),
     })),
   };
 }
 
 async function fetchRecipePage(
   where: Prisma.RecipeWhereInput | undefined,
-  { first, after }: { first: number; after?: string | null },
+  {
+    first,
+    after,
+    viewerUserId,
+  }: {
+    first: number;
+    after?: string | null;
+    viewerUserId?: string | null;
+  },
 ): Promise<RecipePageRecord[]> {
   const take = first;
   const baseWhere = where;
@@ -95,31 +110,43 @@ async function fetchRecipePage(
     take: take + 1,
     where: combinedWhere,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    select: { ...recipeDetailSelect, createdAt: true },
-  });
+    select: {
+      ...recipeSelectWithViewer(viewerUserId),
+      createdAt: true,
+    },
+  }) as Promise<RecipePageRecord[]>;
 }
 
 export async function listRecipes({
   first = 24,
   after,
   search,
+  viewerUserId,
 }: {
   first?: number;
   after?: string | null;
   search?: string | null;
+  viewerUserId?: string | null;
 }): Promise<RecipeConnection> {
   const recipes = await fetchRecipePage(recipeSearchWhere(search), {
     first,
     after,
+    viewerUserId,
   });
   return buildRecipeConnection(recipes, first, after);
 }
 
 export async function listMyRecipes(
   userId: string,
-  { first = 24, after }: { first?: number; after?: string | null },
+  {
+    first = 24,
+    after,
+  }: { first?: number; after?: string | null },
 ): Promise<RecipeConnection> {
-  const recipes = await fetchRecipePage({ authorId: userId }, { first, after });
+  const recipes = await fetchRecipePage(
+    { authorId: userId },
+    { first, after, viewerUserId: userId },
+  );
   return buildRecipeConnection(recipes, first, after);
 }
 
@@ -129,9 +156,9 @@ export async function listFavoriteRecipes(
 ): Promise<RecipeConnection> {
   const recipes = await fetchRecipePage(
     { favoritedBy: { some: { id: userId } } },
-    { first, after },
+    { first, after, viewerUserId: userId },
   );
-  return buildRecipeConnection(recipes, first, after);
+  return buildRecipeConnection(recipes, first, after, { forceFavorited: true });
 }
 
 export { fetchRecipePage, recipeSearchWhere };

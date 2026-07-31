@@ -2,12 +2,18 @@ import "server-only";
 
 import { prisma } from "@kk/db";
 
-import { mapRecipeToDto, recipeDetailSelect } from "./recipe-select";
+import {
+  mapRecipeToDto,
+  recipeSelectWithViewer,
+} from "./recipe-select";
 
-export async function getRecipeById(id: string) {
+export async function getRecipeById(
+  id: string,
+  viewerUserId?: string | null,
+) {
   const recipe = await prisma.recipe.findUnique({
     where: { id },
-    select: recipeDetailSelect,
+    select: recipeSelectWithViewer(viewerUserId),
   });
 
   if (!recipe) {

@@ -1,17 +1,8 @@
-import {
-  createRecipeInputSchema,
-  recipesListQuerySchema,
-} from "@kk/shared";
-import {
-  createRecipeForUser,
-  listRecipes,
-} from "@kk/domain";
+import { createRecipeInputSchema, recipesListQuerySchema } from "@kk/shared";
+import { createRecipeForUser, listRecipes } from "@kk/domain";
 
-import { requireUserId } from "@/lib/api/route-handler";
-import {
-  handleDomainError,
-  jsonResponse,
-} from "@/lib/api/json-response";
+import { getOptionalUserId, requireUserId } from "@/lib/api/route-handler";
+import { handleDomainError, jsonResponse } from "@/lib/api/json-response";
 
 export async function GET(request: Request) {
   try {
@@ -22,7 +13,8 @@ export async function GET(request: Request) {
       search: searchParams.get("search") ?? undefined,
     });
 
-    const connection = await listRecipes(query);
+    const viewerUserId = await getOptionalUserId(request);
+    const connection = await listRecipes({ ...query, viewerUserId });
     return jsonResponse(connection);
   } catch (error) {
     return handleDomainError(error);

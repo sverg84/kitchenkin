@@ -1,14 +1,11 @@
-import {
-  apiErrorCodes,
-  updateRecipeInputSchema,
-} from "@kk/shared";
+import { apiErrorCodes, updateRecipeInputSchema } from "@kk/shared";
 import {
   deleteRecipeForUser,
   getRecipeById,
   updateRecipeForUser,
 } from "@kk/domain";
 
-import { requireUserId } from "@/lib/api/route-handler";
+import { getOptionalUserId, requireUserId } from "@/lib/api/route-handler";
 import {
   handleDomainError,
   jsonError,
@@ -17,10 +14,11 @@ import {
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const recipe = await getRecipeById(id);
+    const viewerUserId = await getOptionalUserId(request);
+    const recipe = await getRecipeById(id, viewerUserId);
 
     if (!recipe) {
       return jsonError("Recipe not found", 404, apiErrorCodes.NOT_FOUND);

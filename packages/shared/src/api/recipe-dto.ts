@@ -40,6 +40,8 @@ export const recipeDtoSchema = z.object({
   author: authorDtoSchema,
   ingredients: z.array(ingredientDtoSchema),
   allergens: z.array(allergenSchema),
+  /** True when the current viewer has favorited this recipe; always false when anonymous. */
+  isFavorited: z.boolean(),
 });
 
 export type RecipeDTO = z.infer<typeof recipeDtoSchema>;
@@ -53,6 +55,7 @@ export const recipeListItemDtoSchema = recipeDtoSchema.pick({
   cookTime: true,
   tags: true,
   image: true,
+  isFavorited: true,
 });
 
 export type RecipeListItemDTO = z.infer<typeof recipeListItemDtoSchema>;
@@ -67,3 +70,15 @@ export const recipesListQuerySchema = z.object({
 });
 
 export type RecipesListQuery = z.infer<typeof recipesListQuerySchema>;
+
+export const setFavoriteBodySchema = z.object({
+  favorited: z.boolean(),
+});
+
+export type SetFavoriteBody = z.infer<typeof setFavoriteBodySchema>;
+
+export const setFavoriteResponseSchema = z.object({
+  favorited: z.boolean(),
+});
+
+export type SetFavoriteResponse = z.infer<typeof setFavoriteResponseSchema>;

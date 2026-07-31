@@ -9,7 +9,7 @@ export {
   updateRecipeForUser,
   deleteRecipeForUser,
 } from "./recipes/mutations";
-export { toggleFavorite } from "./recipes/toggle-favorite";
+export { setFavorite } from "./recipes/set-favorite";
 export { imageCreateHandler } from "./integrations/lambda";
 export {
   UnauthorizedError,
