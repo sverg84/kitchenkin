@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { apiErrorCodes } from "@kk/shared";
 import { toggleFavorite } from "@kk/domain";
 
@@ -10,13 +11,14 @@ import {
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireUserId(request);
     const { id } = await context.params;
     const result = await toggleFavorite(userId, id);
     return jsonResponse(result);
   } catch (error) {
+    unstable_rethrow(error);
     if (error instanceof Error && error.message === "Recipe not found") {
       return jsonError("Recipe not found", 404, apiErrorCodes.NOT_FOUND);
     }

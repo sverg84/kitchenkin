@@ -1,6 +1,7 @@
 import { imageCreateHandler } from "@kk/domain";
 import { apiErrorCodes } from "@kk/shared";
 import { NextRequest } from "next/server";
+import { unstable_rethrow } from "next/navigation";
 
 import { requireUserId } from "@/lib/api/route-handler";
 import {
@@ -11,7 +12,7 @@ import {
 
 export async function POST(req: NextRequest) {
   try {
-    await requireUserId();
+    await requireUserId(req);
 
     const data = await req.formData();
     const image = data.get("image");
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
 
     return jsonResponse(lambdaResponse);
   } catch (error) {
+    unstable_rethrow(error);
     if (
       error instanceof Error &&
       error.message.startsWith("File must be an image of type:")

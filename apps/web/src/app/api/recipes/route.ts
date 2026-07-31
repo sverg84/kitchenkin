@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireUserId(request);
     const body = await request.json();
     const input = createRecipeInputSchema.parse(body);
     const recipe = await createRecipeForUser(userId, input);
